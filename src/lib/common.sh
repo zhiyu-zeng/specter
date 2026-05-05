@@ -16,12 +16,11 @@ download() {
     fi
 
     for _dl_try in 1 2 3; do
-        if command -v curl >/dev/null 2>&1; then
+        if command -v curl >/dev/null 2>&1 && curl --version >/dev/null 2>&1; then
             curl --connect-timeout 10 -Ls -o "$_dl_output" "$_dl_url" 2>/dev/null && _dl_code=0 && break
-        elif command -v wget >/dev/null 2>&1; then
+        fi
+        if command -v wget >/dev/null 2>&1; then
             wget -T 10 -qO "$_dl_output" "$_dl_url" 2>/dev/null && _dl_code=0 && break
-        else
-            break
         fi
         sleep 1
     done
@@ -56,7 +55,7 @@ check_network() {
     done
 
     for _cn_retry in 1 2 3; do
-        if command -v curl >/dev/null 2>&1; then
+        if command -v curl >/dev/null 2>&1 && curl --version >/dev/null 2>&1; then
             curl --connect-timeout 5 -sI "$_cn_endpoint" >/dev/null 2>&1 && PATH="$_cn_oldpath" && unset _cn_oldpath _cn_dns _cn_endpoint _cn_retry && return 0
         fi
         if command -v wget >/dev/null 2>&1; then
