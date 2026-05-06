@@ -1,25 +1,18 @@
 {
   "app_title": "Specter",
-
   "nav_home": "Inicio",
-  "nav_menu": "Acciones",
-  "nav_advancemenu": "Avanzado",
+  "nav_setup": "Setup",
+  "nav_maintain": "Maintain",
   "nav_settings": "Ajustes",
-
   "home_version": "Versión del módulo",
-  "home_keybox_status": "Estado de Keybox",
-  "home_keybox_format": "Formato de Keybox",
-  "home_boot_stages": "Etapas de arranque",
-  "home_root_sol": "Método de root",
   "home_android": "Android",
   "home_kernel": "Kernel",
+  "home_tee": "TEE",
+  "home_security_patch": "Security Patch",
   "home_root": "Root",
   "home_refresh": "Actualizar información",
-  "home_refreshing": "Refrescando...",
-  "home_status": "Estado",
   "home_status_online": "En línea",
   "home_status_offline": "Desconectado",
-
   "menu_keybox": "Keybox",
   "menu_google_services": "Servicios de Google",
   "menu_tricky_store": "Tricky Store",
@@ -41,7 +34,6 @@
   "menu_smartmerge_hint": "One package per line. Suffix with ! (force) or ? (conditional)",
   "menu_custom_keybox": "Establecer Keybox personalizado",
   "menu_custom_keybox_desc": "Use your own keybox file, URL, or device path",
-
   "advance_menu_title_extended": "Detección y Correcciones",
   "advance_menu_title_config": "Configuraciones del módulo",
   "advance_clear_all_detection_traces": "Limpiar todos los rastros de detección",
@@ -65,8 +57,11 @@
   "advance_set_pif_desc": "Runs Play Integrity Fix auto-update scripts",
   "advance_upd_rka": "Actualizar configuración RKA",
   "advance_upd_rka_desc": "Provisions Remote Key Attestation config",
-
-  "settings_title": "Ajustes",
+  "tools_danger_zone": "Danger Zone",
+  "tools_danger_zone_desc": "Destructive operations that may affect your device",
+  "danger_confirm_msg": "This action may affect your device. Are you sure?",
+  "danger_confirm": "Continue",
+  "dialog_cancel": "Cancel",
   "settings_language": "Idioma",
   "settings_appearance": "Apariencia",
   "settings_theme_mode": "Modo",
@@ -75,7 +70,6 @@
   "settings_contributors": "Colaboradores del proyecto",
   "settings_dev_mode": "Modo desarrollador",
   "settings_dev_mode_desc": "Mostrar nombres de scripts y salida del terminal",
-
   "theme_mode_dark": "Modo Oscuro",
   "theme_mode_light": "Modo Claro",
   "theme_mode_auto": "Automático (Sistema)",
@@ -89,40 +83,25 @@
   "theme_preset_cyan": "Cyan",
   "theme_preset_grey": "Grey",
   "theme_preset_monet": "Sistema",
-
   "update_title": "Actualización y soporte",
   "update_desc": "",
   "update_github": "Ver en GitHub",
   "update_telegram": "Únete al canal de Telegram",
   "update_note": "Únete a nuestro canal de Telegram o consulta GitHub para obtener actualizaciones, contribuciones y participar en debates técnicos.",
-
   "terminal_clear": "Limpiar",
-
   "install_now": "Instalar ahora",
   "dialog_reset_defaults": "Restablecer valores predeterminados",
   "dialog_save": "Guardar",
   "dialog_clear": "Limpiar",
   "dialog_close": "Cerrar",
-
-  "simple_dialog_title": "Ejecutando…",
   "simple_dialog_wait": "Esto puede tomar un momento",
   "simple_toast_error": "Falló",
   "simple_toast_view_details": "Ver detalles",
   "history_title": "Actividad reciente",
   "history_empty": "Aún no hay actividad - ejecuta una acción para empezar",
   "error_dialog_title": "Detalles del error",
-  "script_history_title": "Historial de scripts",
-  "script_history_empty": "Aún no hay historial de scripts.",
-
   "toast_success": "Hecho ✓",
-  "toast_error": "Falló",
-  "toast_timeout": "Tiempo de espera agotado - verifica la instalación del módulo",
-
-  "role_founder_dev": "Fundador y Desarrollador",
-  "role_contributor_dev": "Desarrollador del Módulo",
-  "role_contributor_webui": "Desarrollador de WebUI",
   "role_Founder & Lead Developer": "Fundador y desarrollador principal",
-
   "custom_kb_title": "Keybox personalizado",
   "custom_kb_file": "Importar archivo",
   "custom_kb_url": "URL o ruta",
@@ -130,7 +109,6 @@
   "custom_kb_no_file": "Ningún archivo seleccionado",
   "custom_kb_apply": "Aplicar",
   "custom_kb_clear": "Limpiar",
-  "custom_kb_applied": "Keybox personalizado configurado",
   "custom_kb_cleared": "Keybox personalizado eliminado",
   "custom_kb_detecting": "Detectando keybox...",
   "custom_kb_detected": "Keybox detectado",
@@ -144,5 +122,7 @@
   "custom_kb_no": "No",
   "custom_kb_yes": "Sí",
   "custom_kb_not_found": "No encontrado en el catálogo",
-  "custom_kb_not_found_desc": "Este keybox no pudo ser emparejado con ninguna fuente conocida"
+  "custom_kb_not_found_desc": "Este keybox no pudo ser emparejado con ninguna fuente conocida",
+  "advance_scan_clean_props": "Scan & Clean Suspicious Props",
+  "advance_scan_clean_props_desc": "Scan and remove leftover Xposed, ADB, LuckyTool, and modding tool traces"
 }

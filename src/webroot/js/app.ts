@@ -19,6 +19,30 @@ import type { CatalogJson } from './types.js';
 
 let devMode = false;
 
+async function confirmDestructive(friendlyName: string): Promise<boolean> {
+  return new Promise(resolve => {
+    const dialog = document.createElement('md-dialog');
+    dialog.setAttribute('type', 'alert');
+    dialog.innerHTML = `
+      <div slot="headline">${getTranslation('tools_danger_zone') || 'Danger Zone'}</div>
+      <div slot="content" style="padding:8px 24px 16px">
+        <p style="margin:0;font-size:0.9375rem">${getTranslation('danger_confirm_msg') || 'This action may affect your device. Are you sure?'}</p>
+        <p style="margin:8px 0 0;font-size:0.8125rem;color:var(--md-sys-color-on-surface-variant)"><strong>${escapeHtml(friendlyName)}</strong></p>
+      </div>
+      <div slot="actions">
+        <md-text-button id="danger-cancel">${getTranslation('dialog_cancel') || 'Cancel'}</md-text-button>
+        <div class="spacer"></div>
+        <md-filled-tonal-button id="danger-confirm" style="--md-filled-tonal-button-container-color:var(--md-sys-color-error);--md-filled-tonal-button-label-text-color:var(--md-sys-color-on-error)">${getTranslation('danger_confirm') || 'Continue'}</md-filled-tonal-button>
+      </div>
+    `;
+    document.body.appendChild(dialog);
+    dialog.querySelector('#danger-cancel')!.addEventListener('click', () => { (dialog as any).close(); resolve(false); });
+    dialog.querySelector('#danger-confirm')!.addEventListener('click', () => { (dialog as any).close(); resolve(true); });
+    dialog.addEventListener('close', () => document.body.removeChild(dialog));
+    (dialog as any).show();
+  });
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   try {
     await initBridge();
@@ -66,45 +90,59 @@ function wireTopBarScroll() {
 function wireNavigation() {
   const navTabs = document.querySelectorAll('.nav-tab');
   const indicator = document.getElementById('nav-indicator')!;
-  const pages = [
-    document.getElementById('home-page')!,
-    document.getElementById('actions-page')!,
-    document.getElementById('advanced-page')!,
-    document.getElementById('settings-page')!,
-  ];
+  const pageIds = ['home-page', 'setup-page', 'maintain-page', 'settings-page'];
+  const pages = pageIds.map(id => document.getElementById(id)!).filter(Boolean);
 
   function reposition(tab: HTMLElement) {
     indicator.style.left = tab.offsetLeft + 'px';
     indicator.style.width = tab.offsetWidth + 'px';
   }
 
-  requestAnimationFrame(() => {
-    const active = document.querySelector('.nav-tab--active') as HTMLElement | null;
-    if (active) reposition(active);
-  });
+  function activateTab(tab: HTMLElement) {
+    const oldTab = document.querySelector('.nav-tab--active');
+    if (oldTab && oldTab !== tab) {
+      oldTab.classList.remove('nav-tab--active');
+      oldTab.removeAttribute('aria-current');
+      oldTab.querySelector('.nav-icon')?.classList.remove('nav-icon--filled');
+    }
+    tab.classList.add('nav-tab--active');
+    tab.setAttribute('aria-current', 'page');
+    tab.querySelector('.nav-icon')?.classList.add('nav-icon--filled');
+    reposition(tab);
+    const pageId = tab.dataset.page || '';
+    pages.forEach((el) => { el.hidden = el.id !== pageId; });
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    const hash = pageId.replace('-page', '');
+    if (location.hash !== `#${hash}`) history.pushState(null, '', `#${hash}`);
+    localStorage.setItem('lastTab', hash);
+  }
+
+  function navigateTo(hash: string) {
+    const target = hash.replace('#', '') + '-page';
+    const tab = Array.from(navTabs).find(t => (t as HTMLElement).dataset.page === target) as HTMLElement | null;
+    if (tab && !tab.classList.contains('nav-tab--active')) activateTab(tab);
+  }
 
   navTabs.forEach((tab) => {
     tab.addEventListener('click', () => {
-      if (tab.classList.contains('nav-tab--active')) return;
-      const oldTab = document.querySelector('.nav-tab--active');
-      if (oldTab) {
-        oldTab.classList.remove('nav-tab--active');
-        oldTab.removeAttribute('aria-current');
-        oldTab.querySelector('.nav-icon')?.classList.remove('nav-icon--filled');
-      }
-      tab.classList.add('nav-tab--active');
-      tab.setAttribute('aria-current', 'page');
-      tab.querySelector('.nav-icon')?.classList.add('nav-icon--filled');
-      reposition(tab as HTMLElement);
-      const pageId = (tab as HTMLElement).dataset.page;
-      pages.forEach((el) => { el.hidden = el.id !== pageId; });
-      window.scrollTo({ top: 0, behavior: 'instant' });
+      activateTab(tab as HTMLElement);
     });
+  });
+
+  window.addEventListener('popstate', () => {
+    navigateTo(location.hash || '#home');
   });
 
   window.addEventListener('resize', () => {
     const active = document.querySelector('.nav-tab--active') as HTMLElement | null;
     if (active) reposition(active);
+  });
+
+  requestAnimationFrame(() => {
+    const savedTab = localStorage.getItem('lastTab');
+    const initialHash = location.hash.replace('#', '');
+    const tabName = initialHash || savedTab || 'home';
+    navigateTo(`#${tabName}`);
   });
 }
 
@@ -135,6 +173,13 @@ function wireActions() {
     item.addEventListener('click', async (_e) => {
       if ((el as any).disabled) return;
       const scriptName = el.dataset.script || '';
+      const isDestructive = el.hasAttribute('data-destructive');
+      if (isDestructive) {
+        const i18nKey = getFriendlyName(scriptName);
+        const friendlyName = getTranslation(i18nKey) || i18nKey;
+        const confirmed = await confirmDestructive(friendlyName);
+        if (!confirmed) return;
+      }
       const spinner = item.querySelector('.action-spinner') as HTMLElement | null;
       (el as any).disabled = true;
       spinner?.classList.remove('hidden');

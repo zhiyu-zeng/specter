@@ -111,6 +111,14 @@
 - Orphaned i18n keys cleaned up from 4 translation files.
 
 ### WebUI
+- Navigation restructured: replaced Actions/Advanced/Keybox/Tools with Home/Setup/Maintain/Settings — clearer per-tab purpose.
+- Added Danger Zone section under Maintain tab — red error-colored header for destructive operations.
+- Added confirmation dialog for all destructive actions — error-colored alert with Cancel/Continue.
+- URL hash routing (`#home`, `#setup`, `#maintain`, `#settings`) with `popstate` listener for back/forward.
+- Tab persistence — last visited tab saved to localStorage, restored on reload.
+- Removed active-tab guard — re-tapping navigates to the tab (acts as refresh).
+- Increased section title font sizes for better readability.
+- Danger Zone description spacing tightened.
 - RTL centering for nav-bar and toast.
 - Synced missing i18n keys across all translations, cleaned up orphaned keys.
 - Removed hardcoded module path fallback.

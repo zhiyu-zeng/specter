@@ -1,25 +1,18 @@
 {
   "app_title": "Specter",
-
   "nav_home": "الرئيسية",
-  "nav_menu": "الإجراءات",
-  "nav_advancemenu": "متقدم",
+  "nav_setup": "Setup",
+  "nav_maintain": "Maintain",
   "nav_settings": "الإعدادات",
-
   "home_version": "إصدار الوحدة",
-  "home_keybox_status": "حالة Keybox",
-  "home_keybox_format": "تنسيق Keybox",
-  "home_boot_stages": "مراحل التمهيد",
-  "home_root_sol": "طريقة الجذر",
   "home_android": "أندرويد",
   "home_kernel": "النواة",
+  "home_tee": "TEE",
+  "home_security_patch": "Security Patch",
   "home_root": "الجذر",
   "home_refresh": "تحديث المعلومات",
-  "home_refreshing": "جارٍ التحديث…",
-  "home_status": "الحالة",
   "home_status_online": "متصل",
   "home_status_offline": "غير متصل",
-
   "menu_keybox": "Keybox",
   "menu_google_services": "خدمات Google",
   "menu_tricky_store": "Tricky Store",
@@ -41,7 +34,6 @@
   "menu_smartmerge_hint": "One package per line. Suffix with ! (force) or ? (conditional)",
   "menu_custom_keybox": "Set Custom Keybox",
   "menu_custom_keybox_desc": "Use your own keybox file, URL, or device path",
-
   "advance_menu_title_extended": "الكشف والإصلاحات",
   "advance_menu_title_config": "إعدادات الوحدة",
   "advance_clear_all_detection_traces": "مسح كافة آثار الكشف",
@@ -65,8 +57,11 @@
   "advance_set_pif_desc": "Runs Play Integrity Fix auto-update scripts",
   "advance_upd_rka": "تحديث إعدادات RKA",
   "advance_upd_rka_desc": "Provisions Remote Key Attestation config",
-
-  "settings_title": "الإعدادات",
+  "tools_danger_zone": "Danger Zone",
+  "tools_danger_zone_desc": "Destructive operations that may affect your device",
+  "danger_confirm_msg": "This action may affect your device. Are you sure?",
+  "danger_confirm": "Continue",
+  "dialog_cancel": "Cancel",
   "settings_language": "اللغة",
   "settings_appearance": "المظهر",
   "settings_theme_mode": "الوضع",
@@ -75,7 +70,6 @@
   "settings_contributors": "مساهمو المشروع",
   "settings_dev_mode": "وضع المطور",
   "settings_dev_mode_desc": "عرض أسماء البرامج النصية الخام ومخرجات الطرفية",
-
   "theme_mode_dark": "داكن",
   "theme_mode_light": "فاتح",
   "theme_mode_auto": "تلقائي",
@@ -89,40 +83,25 @@
   "theme_preset_cyan": "Cyan",
   "theme_preset_grey": "Grey",
   "theme_preset_monet": "النظام",
-
   "update_title": "التحديث والدعم",
   "update_desc": "",
   "update_github": "العرض على GitHub",
   "update_telegram": "انضم إلى Telegram",
   "update_note": "انضم إلى Telegram أو تفقد GitHub للمساهمات والمناقشات التقنية.",
-
   "terminal_clear": "مسح",
-
   "install_now": "تثبيت الآن",
   "dialog_reset_defaults": "إعادة التعيين الافتراضي",
   "dialog_save": "حفظ",
   "dialog_clear": "مسح",
   "dialog_close": "إغلاق",
-
-  "simple_dialog_title": "جارٍ التشغيل…",
   "simple_dialog_wait": "قد يستغرق ذلك لحظة",
   "simple_toast_error": "فشل",
   "simple_toast_view_details": "عرض التفاصيل",
   "history_title": "النشاط الأخير",
   "history_empty": "لا يوجد نشاط بعد - قم بتشغيل إجراء للبدء",
   "error_dialog_title": "تفاصيل الخطأ",
-  "script_history_title": "سجل الأوامر",
-  "script_history_empty": "لا يوجد سجل أوامر بعد.",
-
   "toast_success": "تم ✓",
-  "toast_error": "فشل",
-  "toast_timeout": "انتهت المهلة - تحقق من تثبيت الوحدة",
-
-  "role_founder_dev": "المؤسس والمطور",
-  "role_contributor_dev": "مطور الوحدة",
-  "role_contributor_webui": "مطور WebUI",
   "role_Founder & Lead Developer": "المؤسس وقائد التطوير",
-
   "custom_kb_title": "Keybox مخصص",
   "custom_kb_file": "استيراد ملف",
   "custom_kb_url": "رابط أو مسار",
@@ -130,7 +109,6 @@
   "custom_kb_no_file": "لم يتم تحديد ملف",
   "custom_kb_apply": "تطبيق",
   "custom_kb_clear": "مسح",
-  "custom_kb_applied": "تم تكوين Keybox مخصص",
   "custom_kb_cleared": "تم مسح Keybox مخصص",
   "custom_kb_detecting": "جارٍ الكشف عن Keybox...",
   "custom_kb_detected": "تم اكتشاف Keybox",
@@ -144,5 +122,7 @@
   "custom_kb_no": "لا",
   "custom_kb_yes": "نعم",
   "custom_kb_not_found": "غير موجود في الكتالوج",
-  "custom_kb_not_found_desc": "تعذر مطابقة Keybox مع أي مصدر معروف"
+  "custom_kb_not_found_desc": "تعذر مطابقة Keybox مع أي مصدر معروف",
+  "advance_scan_clean_props": "Scan & Clean Suspicious Props",
+  "advance_scan_clean_props_desc": "Scan and remove leftover Xposed, ADB, LuckyTool, and modding tool traces"
 }

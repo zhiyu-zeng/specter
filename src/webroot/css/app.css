@@ -477,7 +477,7 @@ section:not([hidden]) {
   gap: 6px;
   color: var(--md-sys-color-primary);
   padding: 4px 14px;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -491,11 +491,27 @@ section:not([hidden]) {
   max-width: 800px;
   margin: 0 auto;
   padding: 0 20px;
-  font-size: 0.9em;
+  font-size: 1em;
   font-weight: bold;
   color: var(--md-sys-color-on-surface);
   box-sizing: border-box;
   user-select: none;
+}
+
+.danger-zone-title {
+  color: var(--md-sys-color-error);
+  margin-top: 24px;
+}
+
+.danger-zone-desc {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto 8px;
+  padding: 0 20px;
+  font-size: 0.78em;
+  color: var(--md-sys-color-error);
+  opacity: 0.8;
+  box-sizing: border-box;
 }
 
 .list-container {

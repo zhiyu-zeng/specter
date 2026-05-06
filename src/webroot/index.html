@@ -107,7 +107,7 @@
 
         </section>
 
-        <section id="actions-page" hidden>
+        <section id="setup-page" hidden>
 
           <h2 class="list-title" data-i18n="menu_keybox">Keybox</h2>
           <md-filled-card class="keybox-install-card">
@@ -140,20 +140,6 @@
                 <span class="supporting-text" data-i18n="menu_custom_keybox_desc">Use your own keybox file, URL, or device path</span>
               </div>
               <div class="spacer"></div>
-              <md-ripple></md-ripple>
-            </div>
-          </div>
-
-          <h2 class="list-title" data-i18n="menu_google_services">Google Services</h2>
-          <div class="list-container">
-            <div class="list-item" data-script="gms.sh">
-              <div class="li-icon"><md-icon aria-hidden="true">block</md-icon></div>
-              <div class="list-item-content">
-                <div class="toggle-text" data-i18n="menu_force_clear">Force Stop & Clear Play Store</div>
-                <span class="supporting-text" data-i18n="menu_force_clear_desc">Force-stops Play Store and wipes its data cache</span>
-              </div>
-              <div class="spacer"></div>
-              <md-circular-progress indeterminate class="action-spinner hidden"></md-circular-progress>
               <md-ripple></md-ripple>
             </div>
           </div>
@@ -238,68 +224,6 @@
             </div>
           </div>
 
-        </section>
-
-        <section id="advanced-page" hidden>
-
-          <h2 class="list-title" data-i18n="advance_menu_title_extended">Detection Fixes</h2>
-          <div class="list-container">
-            <div class="list-item" data-script="cleanup.sh" data-destructive>
-              <div class="li-icon"><md-icon aria-hidden="true">delete_sweep</md-icon></div>
-              <div class="list-item-content">
-                <div class="toggle-text" data-i18n="advance_clear_all_detection_traces">Clear All Detection Traces</div>
-                <span class="supporting-text" data-i18n="advance_clear_all_detection_traces_desc">Deletes detector app data, temp files, resets props, removes ODEX</span>
-              </div>
-              <div class="spacer"></div>
-              <md-circular-progress indeterminate class="action-spinner hidden"></md-circular-progress>
-              <md-ripple></md-ripple>
-            </div>
-
-            <div class="list-item" data-script="pif2.sh">
-              <div class="li-icon"><md-icon aria-hidden="true">bug_report</md-icon></div>
-              <div class="list-item-content">
-                <div class="toggle-text" data-i18n="advance_fix_detect_pif">Fix PIF Detection</div>
-                <span class="supporting-text" data-i18n="advance_fix_pif_desc">Removes PIF-related properties via resetprop</span>
-              </div>
-              <div class="spacer"></div>
-              <md-circular-progress indeterminate class="action-spinner hidden"></md-circular-progress>
-              <md-ripple></md-ripple>
-            </div>
-
-            <div class="list-item" data-script="kill_all.sh" data-destructive>
-              <div class="li-icon"><md-icon aria-hidden="true">cancel</md-icon></div>
-              <div class="list-item-content">
-                <div class="toggle-text" data-i18n="advance_kill_all">Kill All Processes</div>
-                <span class="supporting-text" data-i18n="advance_kill_all_desc">Force-stops and clears data for all known detector apps</span>
-              </div>
-              <div class="spacer"></div>
-              <md-circular-progress indeterminate class="action-spinner hidden"></md-circular-progress>
-              <md-ripple></md-ripple>
-            </div>
-
-            <div class="list-item" data-script="widevine.sh">
-              <div class="li-icon"><md-icon aria-hidden="true">layers</md-icon></div>
-              <div class="list-item-content">
-                <div class="toggle-text" data-i18n="advance_wdevinel1">Fix Widevine L1</div>
-                <span class="supporting-text" data-i18n="advance_wdevinel1_desc">Installs attestation keys for Widevine L1 DRM (Qualcomm devices only)</span>
-              </div>
-              <div class="spacer"></div>
-              <md-circular-progress indeterminate class="action-spinner hidden"></md-circular-progress>
-              <md-ripple></md-ripple>
-            </div>
-
-            <div class="list-item" data-script="suspicious_props.sh" data-destructive>
-              <div class="li-icon"><md-icon aria-hidden="true">cleaning_services</md-icon></div>
-              <div class="list-item-content">
-                <div class="toggle-text" data-i18n="advance_scan_clean_props">Scan & Clean Suspicious Props</div>
-                <span class="supporting-text" data-i18n="advance_scan_clean_props_desc">Scans for and removes leftover persistent props from modding tools, Xposed, or debug state</span>
-              </div>
-              <div class="spacer"></div>
-              <md-circular-progress indeterminate class="action-spinner hidden"></md-circular-progress>
-              <md-ripple></md-ripple>
-            </div>
-          </div>
-
           <h2 class="list-title" data-i18n="advance_toggles_title">Boot Behavior</h2>
           <div class="list-container">
             <div class="list-item list-item--toggle" id="recovery-toggle-row">
@@ -310,6 +234,38 @@
               </div>
               <div class="spacer"></div>
               <md-switch icons id="recovery-switch"></md-switch>
+              <md-ripple></md-ripple>
+            </div>
+          </div>
+
+        </section>
+
+        <section id="maintain-page" hidden>
+
+          <h2 class="list-title" data-i18n="menu_google_services">Google Services</h2>
+          <div class="list-container">
+            <div class="list-item" data-script="gms.sh">
+              <div class="li-icon"><md-icon aria-hidden="true">block</md-icon></div>
+              <div class="list-item-content">
+                <div class="toggle-text" data-i18n="menu_force_clear">Force Stop & Clear Play Store</div>
+                <span class="supporting-text" data-i18n="menu_force_clear_desc">Force-stops Play Store and wipes its data cache</span>
+              </div>
+              <div class="spacer"></div>
+              <md-circular-progress indeterminate class="action-spinner hidden"></md-circular-progress>
+              <md-ripple></md-ripple>
+            </div>
+          </div>
+
+          <h2 class="list-title" data-i18n="advance_fix_detect_pif">Fix PIF Detection</h2>
+          <div class="list-container">
+            <div class="list-item" data-script="pif2.sh">
+              <div class="li-icon"><md-icon aria-hidden="true">bug_report</md-icon></div>
+              <div class="list-item-content">
+                <div class="toggle-text" data-i18n="advance_fix_detect_pif">Fix PIF Detection</div>
+                <span class="supporting-text" data-i18n="advance_fix_pif_desc">Removes PIF-related properties via resetprop</span>
+              </div>
+              <div class="spacer"></div>
+              <md-circular-progress indeterminate class="action-spinner hidden"></md-circular-progress>
               <md-ripple></md-ripple>
             </div>
           </div>
@@ -354,6 +310,54 @@
               <div class="list-item-content">
                 <div class="toggle-text" data-i18n="advance_upd_rka">Update RKA Config</div>
                 <span class="supporting-text" data-i18n="advance_upd_rka_desc">Provisions Remote Key Attestation config</span>
+              </div>
+              <div class="spacer"></div>
+              <md-circular-progress indeterminate class="action-spinner hidden"></md-circular-progress>
+              <md-ripple></md-ripple>
+            </div>
+          </div>
+
+          <h2 class="list-title danger-zone-title" data-i18n="tools_danger_zone">Danger Zone</h2>
+          <p class="danger-zone-desc" data-i18n="tools_danger_zone_desc">Destructive operations that may affect your device</p>
+          <div class="list-container">
+            <div class="list-item" data-script="cleanup.sh" data-destructive>
+              <div class="li-icon"><md-icon aria-hidden="true">delete_sweep</md-icon></div>
+              <div class="list-item-content">
+                <div class="toggle-text" data-i18n="advance_clear_all_detection_traces">Clear All Detection Traces</div>
+                <span class="supporting-text" data-i18n="advance_clear_all_detection_traces_desc">Deletes detector app data, temp files, resets props, removes ODEX</span>
+              </div>
+              <div class="spacer"></div>
+              <md-circular-progress indeterminate class="action-spinner hidden"></md-circular-progress>
+              <md-ripple></md-ripple>
+            </div>
+
+            <div class="list-item" data-script="kill_all.sh" data-destructive>
+              <div class="li-icon"><md-icon aria-hidden="true">cancel</md-icon></div>
+              <div class="list-item-content">
+                <div class="toggle-text" data-i18n="advance_kill_all">Kill All Processes</div>
+                <span class="supporting-text" data-i18n="advance_kill_all_desc">Force-stops and clears data for all known detector apps</span>
+              </div>
+              <div class="spacer"></div>
+              <md-circular-progress indeterminate class="action-spinner hidden"></md-circular-progress>
+              <md-ripple></md-ripple>
+            </div>
+
+            <div class="list-item" data-script="suspicious_props.sh" data-destructive>
+              <div class="li-icon"><md-icon aria-hidden="true">cleaning_services</md-icon></div>
+              <div class="list-item-content">
+                <div class="toggle-text" data-i18n="advance_scan_clean_props">Scan & Clean Suspicious Props</div>
+                <span class="supporting-text" data-i18n="advance_scan_clean_props_desc">Scans for and removes leftover persistent props from modding tools, Xposed, or debug state</span>
+              </div>
+              <div class="spacer"></div>
+              <md-circular-progress indeterminate class="action-spinner hidden"></md-circular-progress>
+              <md-ripple></md-ripple>
+            </div>
+
+            <div class="list-item" data-script="widevine.sh" data-destructive>
+              <div class="li-icon"><md-icon aria-hidden="true">layers</md-icon></div>
+              <div class="list-item-content">
+                <div class="toggle-text" data-i18n="advance_wdevinel1">Fix Widevine L1</div>
+                <span class="supporting-text" data-i18n="advance_wdevinel1_desc">Installs attestation keys for Widevine L1 DRM (Qualcomm devices only)</span>
               </div>
               <div class="spacer"></div>
               <md-circular-progress indeterminate class="action-spinner hidden"></md-circular-progress>
@@ -491,14 +495,14 @@
         <span class="nav-label" data-i18n="nav_home">Home</span>
       </button>
 
-      <button class="nav-tab" data-page="actions-page" >
+      <button class="nav-tab" data-page="setup-page" >
         <md-icon class="nav-icon" aria-hidden="true">tune</md-icon>
-        <span class="nav-label" data-i18n="nav_menu">Actions</span>
+        <span class="nav-label" data-i18n="nav_setup">Setup</span>
       </button>
 
-      <button class="nav-tab" data-page="advanced-page" >
-        <md-icon class="nav-icon" aria-hidden="true">shield</md-icon>
-        <span class="nav-label" data-i18n="nav_advancemenu">Advanced</span>
+      <button class="nav-tab" data-page="maintain-page" >
+        <md-icon class="nav-icon" aria-hidden="true">build</md-icon>
+        <span class="nav-label" data-i18n="nav_maintain">Maintain</span>
       </button>
 
       <button class="nav-tab" data-page="settings-page" >

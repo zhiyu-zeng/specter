@@ -1,25 +1,18 @@
 {
   "app_title": "Specter",
-
   "nav_home": "主页",
-  "nav_menu": "操作",
-  "nav_advancemenu": "高级",
+  "nav_setup": "Setup",
+  "nav_maintain": "Maintain",
   "nav_settings": "设置",
-
   "home_version": "模块版本",
-  "home_keybox_status": "Keybox 状态",
-  "home_keybox_format": "Keybox 格式",
-  "home_boot_stages": "启动阶段",
-  "home_root_sol": "Root 方式",
   "home_android": "Android",
   "home_kernel": "内核",
+  "home_tee": "TEE",
+  "home_security_patch": "Security Patch",
   "home_root": "Root",
   "home_refresh": "刷新信息",
-  "home_refreshing": "刷新中...",
-  "home_status": "状态",
   "home_status_online": "在线",
   "home_status_offline": "离线",
-
   "menu_keybox": "Keybox",
   "menu_google_services": "Google 服务",
   "menu_tricky_store": "Tricky Store",
@@ -41,7 +34,6 @@
   "menu_smartmerge_hint": "One package per line. Suffix with ! (force) or ? (conditional)",
   "menu_custom_keybox": "设置自定义 Keybox",
   "menu_custom_keybox_desc": "Use your own keybox file, URL, or device path",
-
   "advance_menu_title_extended": "检测与修复",
   "advance_menu_title_config": "模块配置",
   "advance_clear_all_detection_traces": "清除所有检测痕迹",
@@ -65,8 +57,11 @@
   "advance_set_pif_desc": "Runs Play Integrity Fix auto-update scripts",
   "advance_upd_rka": "更新 RKA 配置",
   "advance_upd_rka_desc": "Provisions Remote Key Attestation config",
-
-  "settings_title": "设置",
+  "tools_danger_zone": "Danger Zone",
+  "tools_danger_zone_desc": "Destructive operations that may affect your device",
+  "danger_confirm_msg": "This action may affect your device. Are you sure?",
+  "danger_confirm": "Continue",
+  "dialog_cancel": "Cancel",
   "settings_language": "语言",
   "settings_appearance": "外观",
   "settings_theme_mode": "模式",
@@ -75,7 +70,6 @@
   "settings_contributors": "项目贡献者",
   "settings_dev_mode": "开发者模式",
   "settings_dev_mode_desc": "显示原始脚本名称和终端输出",
-
   "theme_mode_dark": "暗色模式",
   "theme_mode_light": "亮色模式",
   "theme_mode_auto": "自动 (跟随系统)",
@@ -89,40 +83,25 @@
   "theme_preset_cyan": "Cyan",
   "theme_preset_grey": "Grey",
   "theme_preset_monet": "跟随系统",
-
   "update_title": "更新与支持",
   "update_desc": "",
   "update_github": "在 GitHub 上查看",
   "update_telegram": "加入 Telegram 频道",
   "update_note": "加入我们的 Telegram 频道或者查看 GitHub 以获取最新更新、贡献清单和技术讨论。",
-
   "terminal_clear": "清除",
-
   "install_now": "立即安装",
   "dialog_reset_defaults": "恢复默认设置",
   "dialog_save": "保存",
   "dialog_clear": "清除",
   "dialog_close": "关闭",
-
-  "simple_dialog_title": "运行中…",
   "simple_dialog_wait": "这可能需要一点时间",
   "simple_toast_error": "失败",
   "simple_toast_view_details": "查看详情",
   "history_title": "最近活动",
   "history_empty": "暂无活动 - 运行一个操作开始",
   "error_dialog_title": "错误详情",
-  "script_history_title": "脚本历史",
-  "script_history_empty": "暂无脚本历史。",
-
   "toast_success": "完成 ✓",
-  "toast_error": "失败",
-  "toast_timeout": "超时 - 请检查您的模块安装",
-
-  "role_founder_dev": "创始人兼开发者",
-  "role_contributor_dev": "模块开发者",
-  "role_contributor_webui": "WebUI 开发者",
   "role_Founder & Lead Developer": "创始人兼首席开发者",
-
   "custom_kb_title": "自定义 Keybox",
   "custom_kb_file": "导入文件",
   "custom_kb_url": "URL 或路径",
@@ -130,7 +109,6 @@
   "custom_kb_no_file": "未选择文件",
   "custom_kb_apply": "应用",
   "custom_kb_clear": "清除",
-  "custom_kb_applied": "自定义 Keybox 已配置",
   "custom_kb_cleared": "自定义 Keybox 已清除",
   "custom_kb_detecting": "正在检测 Keybox...",
   "custom_kb_detected": "Keybox 已检测",
@@ -144,5 +122,7 @@
   "custom_kb_no": "否",
   "custom_kb_yes": "是",
   "custom_kb_not_found": "未在目录中找到",
-  "custom_kb_not_found_desc": "此 Keybox 无法匹配到任何已知来源"
+  "custom_kb_not_found_desc": "此 Keybox 无法匹配到任何已知来源",
+  "advance_scan_clean_props": "Scan & Clean Suspicious Props",
+  "advance_scan_clean_props_desc": "Scan and remove leftover Xposed, ADB, LuckyTool, and modding tool traces"
 }

@@ -1,25 +1,18 @@
 {
   "app_title": "Specter",
-
   "nav_home": "Главная",
-  "nav_menu": "Действия",
-  "nav_advancemenu": "Расширенные",
+  "nav_setup": "Setup",
+  "nav_maintain": "Maintain",
   "nav_settings": "Настройки",
-
   "home_version": "Версия модуля",
-  "home_keybox_status": "Статус Keybox",
-  "home_keybox_format": "Формат Keybox",
-  "home_boot_stages": "Этапы загрузки",
-  "home_root_sol": "Метод root",
   "home_android": "Android",
   "home_kernel": "Ядро",
+  "home_tee": "TEE",
+  "home_security_patch": "Security Patch",
   "home_root": "Root",
   "home_refresh": "Обновить информацию",
-  "home_refreshing": "Обновление...",
-  "home_status": "Статус",
   "home_status_online": "Онлайн",
   "home_status_offline": "Офлайн",
-
   "menu_keybox": "Keybox",
   "menu_google_services": "Сервисы Google",
   "menu_tricky_store": "Tricky Store",
@@ -41,7 +34,6 @@
   "menu_smartmerge_hint": "One package per line. Suffix with ! (force) or ? (conditional)",
   "menu_custom_keybox": "Установить пользовательский Keybox",
   "menu_custom_keybox_desc": "Use your own keybox file, URL, or device path",
-
   "advance_menu_title_extended": "Обнаружение и исправления",
   "advance_menu_title_config": "Конфигурации модуля",
   "advance_clear_all_detection_traces": "Очистить все следы обнаружения",
@@ -65,8 +57,11 @@
   "advance_set_pif_desc": "Runs Play Integrity Fix auto-update scripts",
   "advance_upd_rka": "Обновить конфигурацию RKA",
   "advance_upd_rka_desc": "Provisions Remote Key Attestation config",
-
-  "settings_title": "Настройки",
+  "tools_danger_zone": "Danger Zone",
+  "tools_danger_zone_desc": "Destructive operations that may affect your device",
+  "danger_confirm_msg": "This action may affect your device. Are you sure?",
+  "danger_confirm": "Continue",
+  "dialog_cancel": "Cancel",
   "settings_language": "Язык",
   "settings_appearance": "Внешний вид",
   "settings_theme_mode": "Режим",
@@ -75,7 +70,6 @@
   "settings_contributors": "Участники проекта",
   "settings_dev_mode": "Режим разработчика",
   "settings_dev_mode_desc": "Показать исходные имена скриптов и вывод терминала",
-
   "theme_mode_dark": "Тёмный",
   "theme_mode_light": "Светлый",
   "theme_mode_auto": "Авто (системный)",
@@ -89,40 +83,25 @@
   "theme_preset_cyan": "Cyan",
   "theme_preset_grey": "Grey",
   "theme_preset_monet": "Система",
-
   "update_title": "Обновления и поддержка",
   "update_desc": "",
   "update_github": "Посмотреть на GitHub",
   "update_telegram": "Присоединяйтесь к Telegram-каналу",
   "update_note": "Присоединяйтесь к нашему Telegram каналу или следите за обновлениями, предложениями по улучшению и техническими обсуждениями на GitHub.",
-
   "terminal_clear": "Очистить",
-
   "install_now": "Установить сейчас",
   "dialog_reset_defaults": "Сбросить настройки",
   "dialog_save": "Сохранить",
   "dialog_clear": "Очистить",
   "dialog_close": "Закрыть",
-
-  "simple_dialog_title": "Выполняется…",
   "simple_dialog_wait": "Это может занять некоторое время",
   "simple_toast_error": "Ошибка",
   "simple_toast_view_details": "Посмотреть детали",
   "history_title": "Недавняя активность",
   "history_empty": "Пока нет активности - выполните действие, чтобы начать",
   "error_dialog_title": "Детали ошибки",
-  "script_history_title": "История скриптов",
-  "script_history_empty": "Истории скриптов пока нет.",
-
   "toast_success": "Готово ✓",
-  "toast_error": "Ошибка",
-  "toast_timeout": "Время вышло - проверьте установку модуля",
-
-  "role_founder_dev": "Основатель и разработчик",
-  "role_contributor_dev": "Разработчик модуля",
-  "role_contributor_webui": "Разработчик WebUI",
   "role_Founder & Lead Developer": "Основатель и ведущий разработчик",
-
   "custom_kb_title": "Пользовательский Keybox",
   "custom_kb_file": "Импорт файла",
   "custom_kb_url": "URL или путь",
@@ -130,7 +109,6 @@
   "custom_kb_no_file": "Файл не выбран",
   "custom_kb_apply": "Применить",
   "custom_kb_clear": "Очистить",
-  "custom_kb_applied": "Пользовательский Keybox настроен",
   "custom_kb_cleared": "Пользовательский Keybox очищен",
   "custom_kb_detecting": "Обнаружение Keybox...",
   "custom_kb_detected": "Keybox обнаружен",
@@ -144,5 +122,7 @@
   "custom_kb_no": "Нет",
   "custom_kb_yes": "Да",
   "custom_kb_not_found": "Не найдено в каталоге",
-  "custom_kb_not_found_desc": "Этот Keybox не удалось сопоставить ни с одним известным источником"
+  "custom_kb_not_found_desc": "Этот Keybox не удалось сопоставить ни с одним известным источником",
+  "advance_scan_clean_props": "Scan & Clean Suspicious Props",
+  "advance_scan_clean_props_desc": "Scan and remove leftover Xposed, ADB, LuckyTool, and modding tool traces"
 }
