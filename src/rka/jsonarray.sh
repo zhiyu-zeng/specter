@@ -238,12 +238,13 @@ _ja_ensure() {
 # shellcheck disable=SC3028,SC3040
 _ja_uuid() {
   cat /proc/sys/kernel/random/uuid 2>/dev/null || \
+    hexdump -n 16 -e '4/4 "%08x" "-" 2/2 "%04x" "-" 2/2 "%04x" "-" 2/2 "%04x" "-" 6/1 "%02x"' /dev/urandom 2>/dev/null || \
     printf '%04x%04x-%04x-%04x-%04x-%04x%04x%04x\n' \
-      $((RANDOM % 65536)) $((RANDOM % 65536)) \
-      $((RANDOM % 65536)) \
-      $((RANDOM % 65536)) \
-      $((RANDOM % 65536)) \
-      $((RANDOM % 65536)) $((RANDOM % 65536)) $((RANDOM % 65536))
+      $(od -An -N2 -i /dev/urandom 2>/dev/null | tr -d ' ') $(( $(date +%S) * 1234 % 65536 )) \
+      $(od -An -N2 -i /dev/urandom 2>/dev/null | tr -d ' ') \
+      $(od -An -N2 -i /dev/urandom 2>/dev/null | tr -d ' ') \
+      $(od -An -N2 -i /dev/urandom 2>/dev/null | tr -d ' ') \
+      $(od -An -N2 -i /dev/urandom 2>/dev/null | tr -d ' ') $(od -An -N2 -i /dev/urandom 2>/dev/null | tr -d ' ') $(od -An -N2 -i /dev/urandom 2>/dev/null | tr -d ' ')
 }
 
 ja_count() { _ja_ensure "$1"; awk -v OP=count "$_JA_AWK" "$1"; }

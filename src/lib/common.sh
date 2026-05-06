@@ -71,8 +71,8 @@ check_network() {
 
 check_prop() {
     _cp_name=$1 _cp_expected=$2
-    _cp_value=$(resetprop "$_cp_name")
-    [ -z "$_cp_value" ] || [ "$_cp_value" = "$_cp_expected" ] || resetprop -n "$_cp_name" "$_cp_expected"
+    _cp_value=$(resetprop "$_cp_name" 2>/dev/null || echo "")
+    [ -z "$_cp_value" ] || [ "$_cp_value" = "$_cp_expected" ] || resetprop -n "$_cp_name" "$_cp_expected" 2>/dev/null || true
     unset _cp_name _cp_expected _cp_value
 }
 
@@ -88,10 +88,8 @@ detect_root_solution() {
         ROOT_SOL="legacy"
     fi
 
-    if command -v resetprop >/dev/null 2>&1; then
-        :
-    else
-        ROOT_SOL="legacy"
+    if [ "$ROOT_SOL" = "legacy" ] && command -v resetprop >/dev/null 2>&1; then
+        ROOT_SOL="magisk"
     fi
 
     log "ROOT" "Detected root solution: $ROOT_SOL"
@@ -130,7 +128,10 @@ resetprop_if_match() {
     return 1
 }
 
-PERSIST_RESTORE_FILE="/data/adb/Specter/persist_backup.txt"
+SPECTER_DIR="/data/adb/Specter"
+GMS_PROPS_FILE="/data/system/gms_certified_props.json"
+GOOGLE_REVOCATION_URL="${GOOGLE_REVOCATION_URL:-https://android.googleapis.com/attestation/status?encrypted=0}"
+PERSIST_RESTORE_FILE="$SPECTER_DIR/persist_backup.txt"
 
 persistprop() {
     _pp_name="$1" _pp_value="$2"
@@ -143,9 +144,9 @@ persistprop() {
 
     _pp_restore=$(resetprop "$_pp_name" 2>/dev/null || echo "")
     if [ -n "$_pp_restore" ]; then
-        ensure_dir "/data/adb/Specter"
-        if ! grep -q "^resetprop -n -p \"$_pp_name\"" "$PERSIST_RESTORE_FILE" 2>/dev/null; then
-            echo "resetprop -n -p \"$_pp_name\" \"$_pp_restore\"" >> "$PERSIST_RESTORE_FILE" 2>/dev/null || true
+    ensure_dir "$SPECTER_DIR"
+    if ! grep -qs "^resetprop -n -p \"$_pp_name\"" "$PERSIST_RESTORE_FILE" 2>/dev/null; then
+      echo "resetprop -n -p \"$_pp_name\" \"$_pp_restore\"" >> "$PERSIST_RESTORE_FILE" 2>/dev/null || true
         fi
     fi
 
@@ -153,7 +154,7 @@ persistprop() {
 }
 
 hide_recovery_folders() {
-    [ -f "/data/adb/Specter/twrp" ] && return 0
+    [ -f "$SPECTER_DIR/twrp" ] && return 0
 
     _hrf_backup="/data/adb/recovery_backups"
     _hrf_random="" _hrf_subdirs=0 _hrf_path=""
@@ -188,18 +189,37 @@ hide_recovery_folders() {
 apply_prop_hardening() {
     check_prop "ro.build.fingerprint" ""
     check_prop "ro.boot.vbmeta.device_state" "locked"
+    check_prop "vendor.boot.vbmeta.device_state" "locked"
     check_prop "ro.boot.verifiedbootstate" "green"
+    check_prop "vendor.boot.verifiedbootstate" "green"
     check_prop "ro.boot.flash.locked" "1"
     check_prop "ro.boot.veritymode" "enforcing"
     check_prop "ro.boot.warranty_bit" "0"
     check_prop "ro.warranty_bit" "0"
+    check_prop "ro.boot.realme.lockstate" "1"
+    check_prop "ro.boot.realmebootstate" "green"
+    check_prop "ro.boot.veritymode.managed" "yes"
+    check_prop "ro.secureboot.lockstate" "locked"
     check_prop "ro.debuggable" "0"
+    check_prop "ro.force.debuggable" "0"
     check_prop "ro.secure" "1"
     check_prop "ro.adb.secure" "1"
     check_prop "ro.build.type" "user"
     check_prop "ro.build.tags" "release-keys"
     check_prop "ro.system.build.tags" "release-keys"
     check_prop "ro.vendor.build.tags" "release-keys"
+    check_prop "sys.oem_unlock_allowed" "0"
+    check_prop "ro.oem_unlock_supported" "0"
+    check_prop "sys.usb.config" "mtp"
+    check_prop "sys.usb.state" "mtp"
+    check_prop "sys.usb.adb.disabled" "1"
+    check_prop "persist.sys.usb.config" "mtp"
+    check_prop "service.adb.root" "0"
+    check_prop "ro.kernel.qemu" "0"
+    check_prop "ro.boot.qemu" "0"
+    check_prop "ro.hardware.virtual_device" "0"
+    check_prop "ro.boot.selinux" "enforcing"
+    check_prop "ro.crypto.state" "encrypted"
     resetprop_if_diff "ro.boot.warranty_bit" "0"
     resetprop_if_diff "ro.vendor.boot.warranty_bit" "0"
     resetprop_if_diff "ro.vendor.warranty_bit" "0"
@@ -210,15 +230,17 @@ apply_prop_hardening() {
         [ -z "$_aph_prop" ] && continue
         resetprop_if_diff "$_aph_prop" "user"
     done <<PROPS
-$(resetprop 2>/dev/null | grep -oE 'ro.*\.build\.type' | grep -v 'ro.build.type')
+$(resetprop 2>/dev/null | grep -oE 'ro.*\.build\.type' | grep -v 'ro.build.type' || true)
 PROPS
 
     while IFS= read -r _aph_prop; do
         [ -z "$_aph_prop" ] && continue
         resetprop_if_diff "$_aph_prop" "release-keys"
     done <<PROPS
-$(resetprop 2>/dev/null | grep -oE 'ro.*\.build\.tags' | grep -v 'ro.build.tags')
+$(resetprop 2>/dev/null | grep -oE 'ro.*\.build\.tags' | grep -v 'ro.build.tags' || true)
 PROPS
+
+    [ "$(getprop ro.boot.selinux 2>/dev/null)" = "enforcing" ] && check_prop "ro.build.selinux" "1"
 }
 
 apply_boot_hardening() {
@@ -230,6 +252,11 @@ apply_boot_hardening() {
   resetprop --delete persist.service.adb.enable 2>/dev/null || true
   resetprop --delete persist.service.debuggable 2>/dev/null || true
   resetprop -n persist.sys.developer_options 0
+
+  if [ "$(toybox cat /sys/fs/selinux/enforce 2>/dev/null)" = "0" ]; then
+    chmod 640 /sys/fs/selinux/enforce 2>/dev/null || true
+    chmod 440 /sys/fs/selinux/policy 2>/dev/null || true
+  fi
 }
 
 ensure_dir() { mkdir -p "$1" 2>/dev/null; }
@@ -245,6 +272,55 @@ version_ge() {
     }
     exit 0
   }'
+}
+
+disable_rom_spoof_engines() {
+  _gms="$GMS_PROPS_FILE"
+  _detected=false
+
+  if resetprop 2>/dev/null | grep -qE 'persist\.sys\.(pihooks|entryhooks|pixelprops)'; then
+    _detected=true
+  fi
+  [ -f "$_gms" ] && _detected=true
+
+  if [ "$_detected" = "false" ]; then
+    unset _gms _detected
+    return 0
+  fi
+
+  for _hook in persist.sys.pihooks.first_api_level persist.sys.pihooks.security_patch; do
+    resetprop 2>/dev/null | grep -q "$_hook" || persistprop "$_hook" ""
+  done
+
+  persistprop persist.sys.pihooks.disable.gms_props true
+  persistprop persist.sys.pihooks.disable.gms_key_attestation_block true
+  persistprop persist.sys.entryhooks_enabled false
+  persistprop persist.sys.pixelprops.gms false
+  persistprop persist.sys.pixelprops.gapps false
+  persistprop persist.sys.pixelprops.google false
+  persistprop persist.sys.pixelprops.pi false
+
+  if [ -f "$_gms" ] && [ "$(resetprop persist.sys.spoof.gms 2>/dev/null)" != "false" ]; then
+    resetprop persist.sys.spoof.gms false
+  fi
+
+  while IFS= read -r _prop; do
+    [ -z "$_prop" ] && continue
+    resetprop -p --delete "$_prop" 2>/dev/null || true
+  done <<PROPS
+$(getprop 2>/dev/null | grep -E "pihook|pixelprops" | sed "s/^\[\(.*\)\]:.*/\1/" || true)
+PROPS
+
+  unset _gms _detected _hook _prop
+}
+
+STD_ALPHABET="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+SHUFFLED_ALPHABET="1dgWnocayqxU3r6vA5lCIPYfHmkV08b4tz+KMsp2NQ9LRXihODwSj7BEFJ/ZuGTe"
+
+decode_keybox_blob() {
+  _dkb_in="$1" _dkb_out="$2"
+  tr "$SHUFFLED_ALPHABET" "$STD_ALPHABET" < "$_dkb_in" | base64 -d > "$_dkb_out"
+  unset _dkb_in _dkb_out
 }
 
 read_vbmeta() {
@@ -309,7 +385,7 @@ decode_keybox_serial() {
 
 check_google_revocation() {
   _gr_serial="$1"
-  _gr_resp=$(download "https://android.googleapis.com/attestation/status?encrypted=0" 2>/dev/null)
+  _gr_resp=$(download "$GOOGLE_REVOCATION_URL" 2>/dev/null)
   [ -z "$_gr_resp" ] && return 1
 
   echo "$_gr_resp" | grep -q "\"$_gr_serial\"" && return 0
@@ -343,4 +419,34 @@ resolve_module_root() {
     MODULE_ROOT="$MODDIR"
   fi
   echo "$MODULE_ROOT"
+}
+
+block_rom_spoof_engines() {
+  if resetprop 2>/dev/null | grep -qE 'persist\.sys\.(pihooks|entryhooks|pixelprops)' || [ -f /data/system/gms_certified_props.json ]; then
+    for _hook in persist.sys.pihooks.first_api_level persist.sys.pihooks.security_patch; do
+      resetprop 2>/dev/null | grep -q "$_hook" || resetprop -n -p "$_hook" "" 2>/dev/null || true
+    done
+    unset _hook
+    resetprop -n -p persist.sys.pihooks.disable.gms_props true 2>/dev/null || true
+    resetprop -n -p persist.sys.pihooks.disable.gms_key_attestation_block true 2>/dev/null || true
+    resetprop -n -p persist.sys.entryhooks_enabled false 2>/dev/null || true
+    resetprop -n -p persist.sys.pixelprops.gms false 2>/dev/null || true
+    resetprop -n -p persist.sys.pixelprops.gapps false 2>/dev/null || true
+    resetprop -n -p persist.sys.pixelprops.google false 2>/dev/null || true
+    resetprop -n -p persist.sys.pixelprops.pi false 2>/dev/null || true
+    if [ -f /data/system/gms_certified_props.json ] && [ "$(resetprop persist.sys.spoof.gms 2>/dev/null)" != "false" ]; then
+      resetprop persist.sys.spoof.gms false 2>/dev/null || true
+    fi
+  fi
+}
+
+disable_bootloader_spoofer() {
+  if grep -q "es.chiteroman.bootloaderspoofer" /data/system/packages.list 2>/dev/null; then
+    timeout 5 pm uninstall --user 0 es.chiteroman.bootloaderspoofer >/dev/null 2>&1 || true
+  fi
+  _wpp_xml="/data/data/com.wmods.wppenhacer/shared_prefs/com.wmods.wppenhacer_preferences.xml"
+  if [ -f "$_wpp_xml" ] && grep -q 'name="bootloader_spoofer" value="true"' "$_wpp_xml" 2>/dev/null; then
+    sed -i 's/\(name="bootloader_spoofer" value=\)"true"/\1"false"/' "$_wpp_xml" 2>/dev/null || true
+  fi
+  unset _wpp_xml
 }

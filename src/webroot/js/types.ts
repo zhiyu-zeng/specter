@@ -3,7 +3,7 @@ export interface KsuBridge {
   spawn?(program: string, args: string, options: string, name: string): void;
 }
 
-export interface KsuSpawnChild {
+export interface ChildProcess {
   stdout: {
     on(ev: 'data', fn: (data: string) => void): void;
     emit(ev: 'data', data: string): void;
@@ -17,30 +17,32 @@ export interface KsuSpawnChild {
   emit(ev: string, ...args: any[]): void;
 }
 
-export interface ModulePathsJson {
+export interface ModulePaths {
   MODDIR: string;
 }
 
 export interface InfoJson {
-  android: string;
-  kernel: string;
-  root: string;
-  root_sol: string;
-  version: string;
-  keybox_format: string;
-  flags: { twrp: boolean; blacklist: boolean };
+  android?: string;
+  kernel?: string;
+  root?: string;
+  root_sol?: string;
+  version?: string;
+  keybox_format?: string;
+  tee_status?: string;
+  security_patch?: string;
+  flags?: { twrp?: boolean; blacklist?: boolean };
 }
 
 export interface KeyboxInfoJson {
   installed: boolean;
-  source: string;
-  source_version: string;
-  text: string;
-  up_to_date: boolean;
-  revoked: boolean;
+  source?: string;
+  source_version?: string;
+  text?: string;
+  up_to_date?: boolean;
+  revoked?: boolean;
 }
 
-export interface DevJsonEntry {
+export interface DevEntry {
   name: string;
   role: string;
   github: string;
@@ -65,7 +67,7 @@ export interface CatalogJson {
 
 export interface ScriptResult {
   success: boolean;
-  output: string;
+  output?: string;
   rawOutput: string;
 }
 

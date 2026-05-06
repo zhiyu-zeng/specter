@@ -1,7 +1,9 @@
 #!/system/bin/sh
+set -e
 MODULE_ROOT="${0%/*}"
 MODULE_ROOT="${MODULE_ROOT%/webroot/common}"
 . "$MODULE_ROOT/lib/common.sh"
+. "$MODULE_ROOT/lib/paths.sh"
 
 INFO_PATH="$MODULE_ROOT/webroot/json/info.json"
 
@@ -23,13 +25,11 @@ elif [ -d "/data/adb/ksu" ]; then
   else
     _root_type="KernelSU"
   fi
-elif [ -d "/data/adb/magisk" ] && [ -f "/data/adb/magisk.db" ]; then
+elif [ -f "/data/adb/magisk" ] || [ -f "/data/adb/magisk.db" ]; then
   _root_type="Magisk"
 fi
 
-# Root solution
 detect_root_solution
-ROOT_SOL=$ROOT_SOL
 
 # Keybox format
 if [ -f "/data/adb/tricky_store/locked.xml" ]; then
@@ -40,9 +40,23 @@ else
   _keybox_format="none"
 fi
 
+# Security patch date
+_patch_date=$(grep '^boot=' /data/adb/tricky_store/security_patch.txt 2>/dev/null | cut -d= -f2 || echo "")
+
 # Flags
-_twrp="false"; [ -f "/data/adb/Specter/twrp" ] && _twrp="true"
-_blacklist="false"; [ -f "/data/adb/Specter/blacklist_enabled" ] && _blacklist="true"
+_twrp="false"; [ -f "$SPECTER_DIR/twrp" ] && _twrp="true"
+_blacklist="false"; [ -f "$SPECTER_DIR/blacklist_enabled" ] && _blacklist="true"
+
+# TEE status
+_tee_status="unknown"
+if [ -f "/data/adb/tricky_store/tee_status" ]; then
+  _tee_val=$(grep -E '^teeBroken=' /data/adb/tricky_store/tee_status | cut -d= -f2 2>/dev/null || echo "")
+  case "$_tee_val" in
+    true)  _tee_status="broken" ;;
+    false) _tee_status="normal" ;;
+  esac
+fi
+
 # Output JSON
 cat <<EOF > "$INFO_PATH"
 {
@@ -52,13 +66,12 @@ cat <<EOF > "$INFO_PATH"
   "root_sol": "$ROOT_SOL",
   "version": "$_version",
   "keybox_format": "$_keybox_format",
+  "tee_status": "$_tee_status",
+  "security_patch": "$_patch_date",
   "flags": {
     "twrp": $_twrp,
     "blacklist": $_blacklist
   }
 }
 EOF
-unset _android_ver _kernel_ver _root_type _version _keybox_format _twrp _blacklist
-
-# Clean up ROOT_SOL variable
-unset ROOT_SOL
+unset _android_ver _kernel_ver _root_type _version _keybox_format _tee_status _patch_date _twrp _blacklist

@@ -63,24 +63,9 @@ _rm "/storage/emulated/0/.vysor"
 _rm "/storage/emulated/0/Vysor"
 log "CLEANUP" "Remote control app data removed"
 
-log "CLEANUP" "Checking for suspicious properties..."
-_suspicious=0
-for _prop in persist.hyperceiler.log.level persist.sys.vold_app_data_isolation_enabled persist.zygote.app_data_isolation persist.com.luckyzyx.luckytool.log.level persist.com.luckyzyx.luckytool.debug persist.com.luckyzyx.luckytool.enable; do
-  getprop "$_prop" >/dev/null 2>&1 && { _suspicious=1; break; }
-done
-if [ "$_suspicious" = "1" ]; then
-  log "CLEANUP" "Suspicious props detected, backing up and cleaning..."
-  if [ -f "/data/property/persistent_properties" ]; then
-    cp -a "/data/property/persistent_properties" "/data/property/persistent_properties.bak" 2>/dev/null || log "CLEANUP" "Warning: Failed to backup persistent properties"
-    for _prop in persist.hyperceiler.log.level persist.sys.vold_app_data_isolation_enabled persist.zygote.app_data_isolation persist.com.luckyzyx.luckytool.log.level persist.com.luckyzyx.luckytool.debug persist.com.luckyzyx.luckytool.enable; do
-      sed -i "/$_prop/d" "/data/property/persistent_properties" 2>/dev/null || log "CLEANUP" "Warning: Failed to remove $_prop"
-    done
-  fi
-  log "CLEANUP" "Suspicious props cleaned"
-else
-  log "CLEANUP" "No suspicious props found"
-fi
-unset _suspicious
+log "CLEANUP" "Running suspicious property scanner..."
+sh "$MODDIR/suspicious_props.sh" 2>&1 || true
+log "CLEANUP" "Suspicious props handled"
 
 log "CLEANUP" "Cleaning temp files..."
 _rm "/data/local/tmp/shizuku"
@@ -108,42 +93,16 @@ _rm "/dev/cpuset/scene-daemon"
 pm clear com.juom >/dev/null 2>&1 || true
 log "CLEANUP" "System data cleaned"
 
+log "CLEANUP" "Checking for bootloader spoofer conflicts..."
+disable_bootloader_spoofer
+
 log "CLEANUP" "Applying prop hardening..."
 apply_prop_hardening
 log "CLEANUP" "Prop hardening applied"
 
-log "CLEANUP" "Resetting USB and ADB properties..."
-check_prop "sys.usb.adb.disabled" "1"
-check_prop "persist.sys.usb.config" "mtp"
-check_prop "sys.usb.config" "mtp"
-check_prop "sys.usb.state" "mtp"
-check_prop "service.adb.root" "0"
-check_prop "vendor.boot.verifiedbootstate" "green"
-check_prop "vendor.boot.vbmeta.device_state" "locked"
-check_prop "ro.secureboot.lockstate" "locked"
-check_prop "ro.boot.realme.lockstate" "1"
-check_prop "ro.oem_unlock_supported" "0"
-check_prop "sys.oem_unlock_allowed" "0"
-check_prop "ro.kernel.qemu" "0"
-check_prop "ro.boot.qemu" "0"
-check_prop "ro.hardware.virtual_device" "0"
-log "CLEANUP" "USB/ADB properties reset"
-
-log "CLEANUP" "Removing persistent service props..."
-resetprop -p --delete persist.service.adb.enable 2>/dev/null || true
-resetprop -p --delete persist.service.debuggable 2>/dev/null || true
-resetprop -p --delete persist.zygote.app_data_isolation 2>/dev/null || true
-resetprop -p --delete persist.hyperceiler.log.level 2>/dev/null || true
-resetprop -p --delete persist.sys.vold_app_data_isolation_enabled 2>/dev/null || true
-resetprop -p --delete persist.com.luckyzyx.luckytool.log.level 2>/dev/null || true
-resetprop -p --delete persist.com.luckyzyx.luckytool.debug 2>/dev/null || true
-resetprop -p --delete persist.com.luckyzyx.luckytool.enable 2>/dev/null || true
-resetprop -p --delete persist.sys.developer_options 2>/dev/null || true
-resetprop -p --delete persist.sys.dev_mode 2>/dev/null || true
-
 resetprop -n persist.sys.dev_mode 0
 resetprop -n persist.sys.debuggable 0
-log "CLEANUP" "Persistent service props removed"
+log "CLEANUP" "Persistent dev mode props reset"
 
 log "CLEANUP" "Applying boot hardening..."
 apply_boot_hardening
@@ -151,8 +110,8 @@ log "CLEANUP" "Boot hardening applied"
 
 if [ "$(getenforce 2>/dev/null)" = "Enforcing" ]; then
   log "CLEANUP" "SELinux is Enforcing, locking boot properties..."
-  resetprop ro.boot.selinux enforcing
-  resetprop ro.build.selinux 1
+  resetprop -n ro.boot.selinux enforcing 2>/dev/null || true
+  resetprop -n ro.build.selinux 1 2>/dev/null || true
   log "CLEANUP" "Boot properties locked"
 fi
 

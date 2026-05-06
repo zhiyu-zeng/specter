@@ -1,4 +1,5 @@
 #!/system/bin/sh
+set -e
 MODDIR=${0%/*}
 . "$MODDIR/../lib/common.sh"
 . "$MODDIR/../lib/paths.sh"
@@ -10,15 +11,15 @@ REQUIRED="1.3.0"
 ZYNEXT_DIR="/data/adb/modules/zygisksu"
 [ ! -d "$ZYNEXT_DIR" ] && ZYNEXT_DIR="/data/adb/modules_update/zygisksu"
 
-TARGET_FILE="$ZYNEXT_DIR/module.prop"
+ZYNEXT_PROPFILE="$ZYNEXT_DIR/module.prop"
 SCRIPT_FILE="$ZYNEXT_DIR/bin/zygiskd"
 
-if [ ! -f "$TARGET_FILE" ]; then
+if [ ! -f "$ZYNEXT_PROPFILE" ]; then
   log "ZYGISK_NEXT" "Error: Zygisk Next module not found at $ZYNEXT_DIR"
   exit 1
 fi
 
-CURRENT=$(grep "^version=" "$TARGET_FILE" | cut -d'=' -f2 | cut -d' ' -f1)
+CURRENT=$(grep "^version=" "$ZYNEXT_PROPFILE" | cut -d'=' -f2 | cut -d' ' -f1)
 log "ZYGISK_NEXT" "Detected Zygisk Next version $CURRENT"
 
 version_ge "$CURRENT" "$REQUIRED" || {

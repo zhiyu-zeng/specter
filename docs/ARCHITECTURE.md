@@ -41,9 +41,10 @@ specter/
 │   │   │                                 #   version_ge, run_device_info,
 │   │   │                                 #   _parse_serial, decode_keybox_serial,
 │   │   │                                 #   find_kmInstallKeybox, resolve_module_root,
-│   │   │                                 #   check_google_revocation
+│   │   │                                 #   check_google_revocation, disable_rom_spoof_engines,
+│   │   │                                 #   decode_keybox_blob
 │   │   ├── config_env.sh                 #   Config persistence: ksud module config with file fallback (cfg_get, cfg_set)
-│   │   └── package_list.sh              #   Fixed target.txt entries + all app lists + GMS_KILL_LIST
+│   │   └── package_list.sh              #   Fixed target.txt entries + app lists + SUSPICIOUS_PROPS + BLACKLIST_EXTRA
 │   │
 │   ├── features/                         # One file = one feature, one responsibility
 │   │   ├── keybox.sh                     #   Download, validate (keys + ID), check Google revocation, install keybox
@@ -61,7 +62,9 @@ specter/
 │   │   ├── widevine.sh                   #   Fix Widevine L1
 │   │   ├── lsposed.sh                    #   Clean LSPosed ODEX traces
 │   │   ├── twrp.sh                       #   Delete TWRP folder
-│   │   └── keybox_info.sh               #   Check keybox status (Google revocation + catalog identity)
+│   │   ├── keybox_info.sh               #   Check keybox status (Google revocation + catalog identity)
+│   │   ├── suspicious_props.sh           #   Scan for leftover persistent props from modding tools
+│   │   └── suspicious_props_clean.sh     #   Scan + clean all suspicious props
 │   │
 │   ├── orchestrator.sh                   # Single entry point for all pipelines
 │   │
@@ -167,7 +170,9 @@ WebUI button
 
 Boot (KernelSU / APatch):
   → service.sh (late_start service, non-blocking)
-    → check_prop() for ro.boot.*, ro.build.*, ro.debuggable, etc.
+    → inline resetprop_if_diff for ro.boot.*, ro.build.*, etc.
+    → inline resetprop_if_match for recovery mode hiding
+    → vbmeta fixer via read_vbmeta() (wrapped in || echo "")
     → exits early - boot-completed.sh handles post-boot hardening
   → boot-completed.sh (at ACTION_BOOT_COMPLETED)
     → apply_boot_hardening()       (settings put + resetprop)
@@ -175,10 +180,10 @@ Boot (KernelSU / APatch):
 
 Boot (Magisk):
   → service.sh (late_start service)
-    → check_prop() for ro.boot.*, ro.build.* (same as KSU)
+    → inline resetprop_if_diff for ro.boot.*, ro.build.*, etc.
+    → vbmeta fixer, additional hardening (inline)
     → polls sys.boot_completed (while/getprop loop) for post-boot actions
     → apply_boot_hardening()       (done inline in service.sh)
-    → force-stops GMS packages
     → hide_recovery_folders()
     → delayed re-spoof after 120s (background subshell)
 ```
@@ -344,13 +349,15 @@ hide_recovery_folders
 **Boot script order:**
 ```
 KernelSU / APatch:
-  service.sh         → immediate property resets (ro.boot.*, ro.build.*)
+  service.sh         → immediate property resets (inline resetprop_if_diff)
   boot-completed.sh  → apply_boot_hardening(), override.description
 
 Magisk:
   service.sh         → immediate property resets + polling for post-boot actions
                        (GMS kill, recovery hiding, delayed spoof)
 ```
+
+⚠️ **Critical:** `apply_prop_hardening()` and `check_prop()` are NEVER called from boot scripts. See [Boot Safety Contract](#boot-safety-contract). All boot-time props are set via inline `resetprop_if_diff` calls with full `2>/dev/null || true` guards.
 
 The `apply_boot_hardening()` function (defined in `lib/common.sh`):
 ```sh
@@ -365,6 +372,53 @@ apply_boot_hardening() {
   resetprop -n persist.sys.developer_options 0
 }
 ```
+
+## Boot Safety Contract
+
+Boot scripts (`service.sh`, `boot-completed.sh`) run in a different risk environment than feature scripts or on-demand actions.
+
+### The Constraint
+
+- **`post-fs-data` stage is BLOCKING** — the boot process pauses until the script finishes or 40s elapses. An unhandled error at this stage can stall boot indefinitely.
+- **`late_start service` stage is NON-BLOCKING** — but failures can still cascade into bootloops depending on the root solution's error handling.
+
+### The Rule
+
+**Boot scripts must use inline `resetprop_if_diff`, never shared abstraction functions like `apply_prop_hardening()` / `check_prop()`.**
+
+```
+                    resetprop_if_diff()          check_prop()
+                    ─────────────────           ─────────────
+Read guard         2>/dev/null || echo ""       none
+Write guard        2>/dev/null || true          none
+Root fallback      setprop for legacy           always resetprop -n
+```
+
+`resetprop_if_diff()` has full guards on every `resetprop` call. `check_prop()` does not — it was designed for on-demand use where a failure means a toast error, not a bricked device.
+
+With `set -e` at the top of every boot script, an unguarded `resetprop` failure immediately aborts the script. In a blocking or critical boot stage, this prevents the system from completing its boot sequence.
+
+### What Is Safe at Boot
+
+Safe — uses `resetprop_if_diff` or explicit `|| echo ""` / `|| true`:
+- All `ro.boot.*`, `ro.build.*`, `ro.debuggable`, `ro.secure`, etc.
+- `read_vbmeta()` — because the caller wraps it in `|| echo ""` before passing through
+- `resetprop_if_match()` — same guards as `resetprop_if_diff`
+- `apply_boot_hardening()` — every internal command has `|| true`
+
+Not safe at boot — lacks error guards or writes to persistent storage:
+- `check_prop()` — no `2>/dev/null || echo ""` on read, no `2>/dev/null || true` on write (unless explicitly added by caller)
+- `apply_prop_hardening()` — internally calls `check_prop()` 30+ times
+- `disable_rom_spoof_engines()` — uses `persistprop()` which writes to `/data/property/persistent_properties`
+- `persistprop()` — writes persistent properties at a stage where system services may be initializing
+
+### Design Principle
+
+| Context | Style | Error handling |
+|---|---|---|
+| Boot scripts | Inline `resetprop_if_diff` | Every call guarded |
+| Feature scripts | Shared functions with `set -e` | Failure = action error toast |
+| Install (customize.sh) | Sourced, no `set -e` | Failure = install abort |
 
 ### Root Manager Detection - Environment Variables
 
@@ -450,13 +504,13 @@ log()                          # Tagged logging: "[FEATURE] message"
 die()                          # log + exit 1
 download()                     # curl with wget fallback, optional sha256 verify
 check_network()                # Connectivity check via ping + HTTP
-check_prop()                   # Force-set system property to expected value
-resetprop_if_diff()            # Conditional property set if different
-resetprop_if_match()           # Conditional property set if matches pattern
-persistprop()                  # Persistent property set + backup to /data/adb/Specter/persist_backup.txt
+check_prop()                   # On-demand prop set (no boot-safe guards — see Boot Safety Contract)
+resetprop_if_diff()            # Conditional prop set if different (boot-safe, has 2>/dev/null || true)
+resetprop_if_match()           # Conditional prop set if matches pattern (boot-safe)
+persistprop()                  # Persistent prop set + backup — NOT safe at boot
 hide_recovery_folders()        # Remove/hide TWRP/OrangeFox/PBRP folders from /sdcard
-apply_prop_hardening()         # Lock down all ro.* security props
-apply_boot_hardening()         # settings put + resetprop for security hardening
+apply_prop_hardening()         # Lock down security props — on-demand only, NEVER at boot
+apply_boot_hardening()         # settings put + resetprop for security hardening (boot-safe)
 ensure_dir()                   # mkdir -p
 _escape_json()                 # Sanitize string for JSON embedding
 version_ge()                   # Semantic version comparison (awk-based)
@@ -464,9 +518,12 @@ read_vbmeta()                  # Read real vbmeta block device → size + sha256
 run_device_info()              # Find and execute device-info.sh across possible paths
 _parse_serial()                # Parse ASN.1 DER-encoded certificate serial
 decode_keybox_serial()         # Extract serial from keybox certificate (base64 → hex → DER)
-check_google_revocation()      # Check keybox serial against Google's attestation endpoint - returns revoked/valid
+check_google_revocation()      # Check keybox serial against Google's attestation endpoint
 find_kmInstallKeybox()         # Locate KmInstallKeybox vendor binary
 resolve_module_root()          # Resolve module root from script path (webroot/common/ support)
+disable_rom_spoof_engines()    # Detect and disable ROM spoof engines (pihooks/pixelprops/entryhooks)
+decode_keybox_blob()           # Reverse shuffled base64 → plain base64 → decode (shared alphabet with rawbin)
+STD_ALPHABET / SHUFFLED_ALPHABET  # Custom base64 alphabet for keybox delivery obfuscation
 ```
 
 ### `lib/config_env.sh` - Config Persistence
@@ -506,6 +563,8 @@ RKA_TOKEN="${RKA_TOKEN:-yurikey-5b70e270d6d69cd399c59ca3d62ccf6e}"
 TRICKY_DIR="/data/adb/tricky_store"
 TARGET_FILE="$TRICKY_DIR/keybox.xml"
 BACKUP_FILE="$TRICKY_DIR/keybox.xml.bak"
+LOCKED_FILE="$TRICKY_DIR/locked.xml"
+LOCKED_BACKUP="$TRICKY_DIR/locked.xml.bak"
 TARGET_TXT="$TRICKY_DIR/target.txt"
 SECURITY_PATCH_FILE="$TRICKY_DIR/security_patch.txt"
 TEE_STATUS="$TRICKY_DIR/tee_status"
@@ -617,7 +676,11 @@ _vol() {
 | `widevine.sh` | - | Download attestation key + run KmInstallKeybox | Network, Qualcomm device |
 | `lsposed.sh` | - | Delete LSPosed base.odex traces | None |
 | `twrp.sh` | - | Delete TWRP folder on internal storage | None |
-| `pif2.sh` | - | Clean up pihook/pixelprops leftover props | None |
+| `pif2.sh` | - | Disable ROM spoof engines (pihooks/pixelprops/entryhooks) — thin wrapper around `disable_rom_spoof_engines()` | None |
+| `suspicious_props.sh` | - | Scan for leftover persistent props from modding tools, Xposed, debug state | None |
+| `suspicious_props_clean.sh` | - | Wrapper that calls `suspicious_props.sh --clean` | None |
+| `suspicious_props.sh` | - | Scan for leftover persistent props from modding tools, Xposed, debug state | None |
+| `suspicious_props_clean.sh` | - | Wrapper that calls `suspicious_props.sh --clean` | None |
 | `keybox_info.sh` | - | Check keybox version + Google revocation status | None |
 
 ---
@@ -723,7 +786,7 @@ Same build + extract version from changelog, create GitHub Release.
 ## File Count Summary
 
 - `lib/` - 5 files (paths, urls, common, config_env, package_list)
-- `features/` - 16 files (keybox, target, security_patch, boot_hash, pif, pif2, hma, zygisk_next, rka, cleanup, gms, kill_all, widevine, lsposed, twrp, keybox_info)
+- `features/` - 18 files (keybox, target, security_patch, boot_hash, pif, pif2, hma, zygisk_next, rka, cleanup, gms, kill_all, widevine, lsposed, twrp, keybox_info, suspicious_props, suspicious_props_clean)
 - `pipelines/` - 2 text files (full_integrity, root_hide)
 - `rka/` - 1 file (jsonarray.sh)
 - `webroot/` - index.html, config.json, css/app.css, 21 TypeScript modules, 5 lang files, 3 json files, 2 assets, 4 common scripts

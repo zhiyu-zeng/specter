@@ -493,7 +493,7 @@ section:not([hidden]) {
   padding: 0 20px;
   font-size: 0.9em;
   font-weight: bold;
-  color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-surface-variant);
   box-sizing: border-box;
   user-select: none;
 }

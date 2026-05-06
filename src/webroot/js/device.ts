@@ -1,28 +1,8 @@
-import { shellEscape } from './utils.js';
+import { shellEscape, fetchJson, setText } from './utils.js';
 import { runScript, exec } from './bridge.js';
 import { appendToOutput } from './terminal.js';
-
-const INFO_URL = '/json/info.json';
-const KEYBOX_INFO_URL = '/json/keybox_info.json';
-
-interface InfoJson {
-  android?: string;
-  kernel?: string;
-  root?: string;
-  root_sol?: string;
-  version?: string;
-  keybox_format?: string;
-  flags?: { twrp?: boolean; blacklist?: boolean };
-}
-
-interface KeyboxInfoJson {
-  installed: boolean;
-  source?: string;
-  source_version?: string;
-  text?: string;
-  up_to_date?: boolean;
-  revoked?: boolean;
-}
+import { API_URLS } from './constants.js';
+import type { InfoJson, KeyboxInfoJson } from './types.js';
 
 export async function initDevice() {
   await refreshDevice();
@@ -38,7 +18,7 @@ export async function refreshDevice() {
   } catch (e) {
     console.warn('Device info script failed:', e);
   }
-  const data = await fetchJson<InfoJson>(INFO_URL);
+  const data = await fetchJson<InfoJson>(API_URLS.INFO);
   if (data) applyAllDeviceInfo(data);
 }
 
@@ -51,26 +31,15 @@ export async function refreshKeyboxStatus() {
   } catch (e) {
     console.warn('Keybox info script failed:', e);
   }
-  const data = await fetchJson<KeyboxInfoJson>(KEYBOX_INFO_URL);
+  const data = await fetchJson<KeyboxInfoJson>(API_URLS.KEYBOX_INFO);
   if (data) applyKeyboxStatus(data);
-}
-
-async function fetchJson<T>(url: string): Promise<T | null> {
-  try {
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    return await res.json();
-  } catch (e) {
-    console.warn('Fetch failed:', url, e);
-    return null;
-  }
 }
 
 function applyAllDeviceInfo(data: InfoJson) {
   applyDeviceInfo(data);
   if (data.flags) applyFlags(data.flags);
   if (data.keybox_format) applyKeyboxFormat(data.keybox_format);
-  applyBootStages(data);
+  applyTeeStatus(data);
 }
 
 function applyDeviceInfo(data: InfoJson) {
@@ -78,10 +47,7 @@ function applyDeviceInfo(data: InfoJson) {
   setText('kernel-value', data.kernel || '—');
   setText('root-value', data.root || '—');
   setText('version-info-value', data.version || '—');
-  const rootSolEl = document.getElementById('root-sol-value');
-  if (rootSolEl && data.root_sol) {
-    rootSolEl.textContent = data.root_sol;
-  }
+  setText('patch-value', data.security_patch || '—');
 }
 
 function applyFlags(flags: { twrp?: boolean; blacklist?: boolean }) {
@@ -104,19 +70,17 @@ function applyKeyboxFormat(format: string) {
   }
 }
 
-function applyBootStages(data: InfoJson) {
-  const bar = document.getElementById('boot-stage-bar');
-  if (!bar) return;
-  if (data.root_sol === "kernelsu" || data.root_sol === "apatch") {
-    bar.style.display = 'flex';
-    document.querySelectorAll('.boot-stage-dot').forEach(el => {
-      const dot = el as HTMLElement;
-      if (dot.dataset.stage === 'boot-completed') {
-        dot.style.color = 'var(--md-sys-color-tertiary)';
-      } else if (dot.dataset.stage === 'post-fs-data' || dot.dataset.stage === 'service') {
-        dot.style.color = 'var(--md-sys-color-tertiary)';
-      }
-    });
+function applyTeeStatus(data: InfoJson) {
+  const el = document.getElementById('tee-value');
+  const card = document.getElementById('tee-status-card');
+  if (!el || !card) return;
+  const status = data.tee_status || 'unknown';
+  el.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+  card.className = 'info-card';
+  if (status === 'broken') {
+    card.classList.add('info-card--warning');
+  } else if (status === 'normal') {
+    card.classList.add('info-card--success');
   }
 }
 
@@ -167,11 +131,6 @@ function applyKeyboxStatus(data: KeyboxInfoJson) {
     statusEl.textContent = 'Active';
     statusEl.className = 'keybox-chip keybox-chip--active';
   }
-}
-
-function setText(id: string, value: string) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = value;
 }
 
 export async function loadBlacklistContent(): Promise<string> {

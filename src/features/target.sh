@@ -14,6 +14,44 @@ if [ -d "/data/adb/modules/TA_utl" ] || [ -d "/data/adb/modules/.TA_utl" ]; then
   exit 0
 fi
 
+_author=$(grep 'author=' /data/adb/modules/tricky_store/module.prop 2>/dev/null | head -1 | cut -d= -f2 | tr '[:upper:]' '[:lower:]')
+case "$_author" in
+  *jingmatrix*)
+    log "TARGET" "TEESimulator detected — locked.xml section"
+    _customize="/sdcard/Specter/customize.txt"
+    if [ -f "$_customize" ] && [ "$(head -1 "$_customize" 2>/dev/null)" != "#disable" ]; then
+      _locked=$(grep -v '^#' "$_customize" | sed 's/[!?]$//' 2>/dev/null || echo "")
+      if [ -n "$_locked" ]; then
+        [ -f "$TARGET_TXT" ] && cp "$TARGET_TXT" "${TARGET_TXT}.bak"
+        _tmp=$(mktemp 2>/dev/null || echo "/data/local/tmp/.specter_tee_$$")
+        : > "$_tmp"
+        if [ -f "$TARGET_TXT" ] && [ -s "$TARGET_TXT" ]; then
+          while IFS= read -r _line || [ -n "$_line" ]; do
+            [ -z "$_line" ] && continue
+            [ "${_line#\[}" != "$_line" ] && continue
+            _skip=false
+            for _e in $_locked; do
+              case "$_line" in "$_e"|"$_e!"|"$_e?") _skip=true; break ;; esac
+            done
+            [ "$_skip" = "false" ] && echo "$_line" >> "$_tmp"
+          done < "$TARGET_TXT"
+        fi
+        echo "[locked.xml]" >> "$_tmp"
+        for _e in $_locked; do echo "$_e" >> "$_tmp"; done
+        mv -f "$_tmp" "$TARGET_TXT"
+        rm -f "$_tmp"
+        log "TARGET" "Preserved existing entries, appended [locked.xml] section"
+        unset _tmp _e _skip _line
+      fi
+      unset _locked
+    fi
+    unset _author _customize
+    log "TARGET" "Finish (TEESimulator)"
+    exit 0
+    ;;
+esac
+unset _author
+
 _count=0
 MODULE_ROOT="${MODDIR%/features}"
 TEMP_PKGS="$MODULE_ROOT/pkgs.txt"
@@ -24,37 +62,15 @@ teeBroken="false"
 [ -f "$TEE_STATUS" ] && teeBroken=$(grep -E '^teeBroken=' "$TEE_STATUS" | cut -d '=' -f2 2>/dev/null || echo "false")
 log "TARGET" "TEE status: teeBroken=$teeBroken"
 
-BLACKLIST="/data/adb/Specter/blacklist.txt"
+BLACKLIST="$SPECTER_DIR/blacklist.txt"
 if [ ! -f "$BLACKLIST" ]; then
-  log "TARGET" "Creating default blacklist"
-  ensure_dir "/data/adb/Specter"
-  cat > "$BLACKLIST" <<- EOF
-com.android.chrome
-com.google.android.apps.photos
-com.google.android.youtube
-com.topjohnwu.magisk
-io.github.vvb2060.mahoshojo
-io.github.vvb2060.keyattestation
-io.github.qwq233.keyattestation
-com.eltavine.duckdetector
-com.rem01gaming.disclosure
-com.reveny.nativechecker
-com.reveny.environmentchecker
-com.reveny.rootchecker
-com.scottyab.rootbeer
-com.scottyab.rootbeer.sample
-com.kimchangyoun.rootbeerfresh
-com.kimchangyoun.magiskdetector
-com.zhenxi.hunter
-icu.nullptr.nativetest
-icu.nullptr.applistdetector
-com.byxiaorun.detector
-com.jrummyapps.rootchecker
-com.smlj.rootcheck
-com.devadvance.rootcloak
-com.devadvance.rootcloakplus
-mmrl
-EOF
+  log "TARGET" "Creating default blacklist from DETECTOR_APPS"
+  ensure_dir "$SPECTER_DIR"
+  {
+    for _pkg in $DETECTOR_APPS $BLACKLIST_EXTRA; do
+      echo "$_pkg"
+    done
+  } > "$BLACKLIST"
   log "TARGET" "Default blacklist created"
 fi
 
@@ -83,7 +99,7 @@ for flag in "-3" "-s"; do
   }
   [ -z "$pkgs" ] && continue
   echo "$pkgs" | cut -d ":" -f 2 > "$TEMP_PKGS"
-  if [ -f "/data/adb/Specter/blacklist_enabled" ] && [ -s "$BLACKLIST" ]; then
+  if [ -f "$SPECTER_DIR/blacklist_enabled" ] && [ -s "$BLACKLIST" ]; then
     if grep -Fvxf "$BLACKLIST" "$TEMP_PKGS" > "${TEMP_PKGS}.filtered" 2>/dev/null; then
       mv "${TEMP_PKGS}.filtered" "$TEMP_PKGS"
     else

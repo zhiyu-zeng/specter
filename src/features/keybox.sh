@@ -24,6 +24,11 @@ _FALLBACK_BASE="${KEYBOX_URL}/fallback"
 _custom_type=$(cat "$CONFIG_DIR/kb_custom_type.val" 2>/dev/null || echo "")
 _custom_value=$(cat "$CONFIG_DIR/kb_custom_value.val" 2>/dev/null || echo "")
 
+_clear_custom() {
+  printf '%s' "" > "$CONFIG_DIR/kb_custom_type.val" 2>/dev/null || true
+  printf '%s' "" > "$CONFIG_DIR/kb_custom_value.val" 2>/dev/null || true
+}
+
 if [ -n "$_custom_type" ] && [ -n "$_custom_value" ]; then
   log "KEYBOX" "Using custom keybox: $_custom_type ($_custom_value)"
   case "$_custom_type" in
@@ -31,32 +36,28 @@ if [ -n "$_custom_type" ] && [ -n "$_custom_value" ]; then
       if [ -f "$_custom_value" ]; then
         cp "$_custom_value" "$TARGET_FILE" || die "Failed to copy custom keybox"
         log "KEYBOX" "Custom keybox installed from $_custom_value"
-        printf '%s' "" > "$CONFIG_DIR/kb_custom_type.val" 2>/dev/null || true
-        printf '%s' "" > "$CONFIG_DIR/kb_custom_value.val" 2>/dev/null || true
+        _clear_custom
         exit 0
       fi
       log "KEYBOX" "Error: Custom keybox file not found: $_custom_value"
-      printf '%s' "" > "$CONFIG_DIR/kb_custom_type.val" 2>/dev/null || true
-      printf '%s' "" > "$CONFIG_DIR/kb_custom_value.val" 2>/dev/null || true
+      _clear_custom
       exit 1
       ;;
     url)
       log "KEYBOX" "Downloading custom keybox from URL..."
       download "$_custom_value" > "$TEMP_FILE" || {
         log "KEYBOX" "Error: Custom URL download failed"
-        printf '%s' "" > "$CONFIG_DIR/kb_custom_type.val" 2>/dev/null || true
-        printf '%s' "" > "$CONFIG_DIR/kb_custom_value.val" 2>/dev/null || true
+        _clear_custom
         [ -f "$BACKUP_FILE" ] && cp "$BACKUP_FILE" "$TARGET_FILE"
         exit 1
       }
-      if base64 -d "$TEMP_FILE" > "$DECODE_FILE" 2>/dev/null && [ -s "$DECODE_FILE" ]; then
+      if decode_keybox_blob "$TEMP_FILE" "$DECODE_FILE" 2>/dev/null && [ -s "$DECODE_FILE" ]; then
         mv "$DECODE_FILE" "$TARGET_FILE" || die "Failed to move decoded keybox"
       else
         cp "$TEMP_FILE" "$TARGET_FILE" || die "Failed to copy keybox"
       fi
       log "KEYBOX" "Custom keybox installed from URL"
-      printf '%s' "" > "$CONFIG_DIR/kb_custom_type.val" 2>/dev/null || true
-      printf '%s' "" > "$CONFIG_DIR/kb_custom_value.val" 2>/dev/null || true
+      _clear_custom
       exit 0
       ;;
   esac
@@ -115,7 +116,7 @@ download "$_DL_URL" > "$TEMP_FILE" || {
   exit 1
 }
 
-if ! base64 -d "$TEMP_FILE" > "$DECODE_FILE" 2>/dev/null; then
+if ! decode_keybox_blob "$TEMP_FILE" "$DECODE_FILE" 2>/dev/null; then
   log "KEYBOX" "Error: Base64 decode failed"
   [ -f "$BACKUP_FILE" ] && cp "$BACKUP_FILE" "$TARGET_FILE"
   exit 1
@@ -149,33 +150,66 @@ fi
 
 _author=$(grep 'author=' /data/adb/modules/tricky_store/module.prop 2>/dev/null | head -1 | cut -d= -f2 | tr '[:upper:]' '[:lower:]')
 
-case "$_author" in
-  *jingmatrix*)
-    log "KEYBOX" "TEE Simulator detected, generating locked.xml format"
-    _serial=$(decode_keybox_serial "$DECODE_FILE" 2>/dev/null || echo "unknown")
-    _random=$(hexdump -n 4 -e '4/4 "%08X"' /dev/urandom 2>/dev/null || echo "$$")
-    _ecdsa_block=$(sed -n '/<Key algorithm="ecdsa">/,/<\/Key>/p' "$DECODE_FILE" 2>/dev/null)
-    _rsa_block=$(sed -n '/<Key algorithm="rsa">/,/<\/Key>/p' "$DECODE_FILE" 2>/dev/null)
+_install_teesimulator() {
+  log "KEYBOX" "TEE Simulator detected, generating locked.xml format"
+
+  _serial=$(decode_keybox_serial "$DECODE_FILE" 2>/dev/null || echo "unknown")
+  _random=$(hexdump -n 4 -e '4/4 "%08X"' /dev/urandom 2>/dev/null || echo "$$")
+  _ecdsa_block=$(sed -n '/<Key algorithm="ecdsa">/,/<\/Key>/p' "$DECODE_FILE" 2>/dev/null)
+  _rsa_block=$(sed -n '/<Key algorithm="rsa">/,/<\/Key>/p' "$DECODE_FILE" 2>/dev/null)
+
+  # Handle backup of existing locked.xml
+  if [ -f "$LOCKED_FILE" ] && [ ! -f "$LOCKED_BACKUP" ]; then
+    cp "$LOCKED_FILE" "$LOCKED_BACKUP"
+    log "KEYBOX" "Created backup of existing locked.xml"
+  fi
+
+  if [ -z "$_ecdsa_block" ]; then
+    log "KEYBOX" "TEE Simulator requires ECDSA key — writing dummy locked.xml"
     {
       echo '<?xml version="1.0" encoding="UTF-8"?>'
       echo '<AndroidAttestation>'
       echo '<NumberOfKeyboxes>1</NumberOfKeyboxes>'
-      echo "<Keybox DeviceID=\"$_serial\">"
-      [ -n "$_ecdsa_block" ] && printf '%s\n' "$_ecdsa_block"
-      echo "  <serial>${_serial}_${_random}</serial>"
-      [ -n "$_rsa_block" ] && printf '%s\n' "$_rsa_block"
+      echo '<Keybox>'
+      echo '# No valid ECDSA key available — locked.xml placeholder'
       echo '</Keybox>'
       echo '</AndroidAttestation>'
-    } > "$TRICKY_DIR/locked.xml"
-    printf '%s' "" > "$CONFIG_DIR/kb_private.val" 2>/dev/null || true
-    log "KEYBOX" "Locked XML written to $TRICKY_DIR/locked.xml"
+    } > "$LOCKED_FILE"
+    log "KEYBOX" "Dummy locked.xml written to $LOCKED_FILE"
+    return
+  fi
+
+  {
+    echo '<?xml version="1.0" encoding="UTF-8"?>'
+    echo '<AndroidAttestation>'
+    echo '<NumberOfKeyboxes>1</NumberOfKeyboxes>'
+    echo "<Keybox DeviceID=\"$_serial\">"
+    printf '%s\n' "$_ecdsa_block"
+    echo "  <serial>${_serial}_${_random}</serial>"
+    [ -n "$_rsa_block" ] && printf '%s\n' "$_rsa_block"
+    echo '</Keybox>'
+    echo '</AndroidAttestation>'
+  } > "$LOCKED_FILE"
+  log "KEYBOX" "Locked XML written to $LOCKED_FILE"
+
+  unset _serial _random _ecdsa_block _rsa_block
+}
+
+_clear_keybox_id() {
+  printf '%s' "" > "$CONFIG_DIR/kb_private.val" 2>/dev/null || true
+}
+
+case "$_author" in
+  *jingmatrix*)
+    _install_teesimulator
+    _clear_keybox_id
     log "KEYBOX" "Finish"
     exit 0
     ;;
 esac
 
 mv "$DECODE_FILE" "$TARGET_FILE" || die "Failed to move decoded keybox to $TARGET_FILE"
-printf '%s' "" > "$CONFIG_DIR/kb_private.val" 2>/dev/null || true
+_clear_keybox_id
 log "KEYBOX" "Keybox installed successfully"
 log "KEYBOX" "Finish"
 exit 0

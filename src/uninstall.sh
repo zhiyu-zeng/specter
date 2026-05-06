@@ -48,9 +48,11 @@ fi
 unset _uid
 
 # Restore persisted props
-if [ -f "/data/adb/Specter/persist_backup.txt" ]; then
-  sh "/data/adb/Specter/persist_backup.txt" 2>/dev/null || true
-  rm -f "/data/adb/Specter/persist_backup.txt" 2>/dev/null
+if [ -f "$SPECTER_DIR/persist_backup.txt" ]; then
+  if grep -q '^resetprop -n -p' "$SPECTER_DIR/persist_backup.txt" 2>/dev/null; then
+    sh "$SPECTER_DIR/persist_backup.txt" 2>/dev/null || true
+  fi
+  rm -f "$SPECTER_DIR/persist_backup.txt" 2>/dev/null
   log "UNINSTALL" "Restored persistent props"
 fi
 

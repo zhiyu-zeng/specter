@@ -85,3 +85,10 @@ Types: `fix:`, `feat:`, `refactor:`, `chore:`, `docs:`, `test:`
 - **NEVER** use `su -c` in feature scripts - module already runs as root
 - **NEVER** hardcode `/data/adb/modules/Specter` - use `$MODDIR`
 - **NEVER** edit `.js` files - the WebUI is TypeScript; edit the `.ts` source files in `src/webroot/js/`
+
+### Boot Script Safety
+
+- `service.sh` and `boot-completed.sh` run in critical boot phases. Every `resetprop` call must use `resetprop_if_diff` (has `2>/dev/null || true` guards) — never `check_prop()`.
+- Shared functions from `common.sh` (`apply_prop_hardening()`, `check_prop()`, `disable_rom_spoof_engines()`, `persistprop()`) must NOT be called from boot scripts. They lack error guards or write to persistent storage. A single unguarded failure with `set -e` causes a bootloop.
+- Boot scripts use inline `resetprop_if_diff` calls. The only shared functions safe to call are `resetprop_if_diff`, `resetprop_if_match`, `apply_boot_hardening`, and `hide_recovery_folders` — all internally have `|| true` on every fallible command.
+- `apply_prop_hardening()` is for on-demand use only (called from `cleanup.sh` and WebUI "Clear All Detection Traces" action). Never call it from boot scripts.

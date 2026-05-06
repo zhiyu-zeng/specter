@@ -64,7 +64,7 @@ if [ "$_ts_found" = true ]; then
         else
             mkdir -p "$TRICKY_DIR"
 
-            if ! base64 -d "$TEMP_FILE" > "$DECODE_FILE" 2>/dev/null; then
+            if ! decode_keybox_blob "$TEMP_FILE" "$DECODE_FILE" 2>/dev/null; then
                 ui_print "- Error: Downloaded keybox is corrupted or invalid. Try again later."
                 rm -f "$TEMP_FILE"
             else

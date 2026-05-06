@@ -2,13 +2,12 @@ import './material.js';
 import { initBridge, spawnScript, exec, getModuleDir as getBridgeModuleDir } from './bridge.js';
 import { setModuleDir, migrateLocalStorage, cfgGet, cfgSet, cfgFlush } from './cfg.js';
 import { initDevice, refreshDevice, refreshKeyboxStatus, loadBlacklistContent, saveBlacklistContent, loadSmartmergeContent, saveSmartmergeContent } from './device.js';
-import { initClock } from './clock.js';
 import { initNetwork } from './network.js';
 import { initTheme } from './theme.js';
 import { initI18n, getTranslation } from './i18n.js';
 import { loadContributors } from './contributors.js';
 import { initRedirect } from './redirect.js';
-import { escapeHtml, shellEscape } from './utils.js';
+import { escapeHtml, shellEscape, fetchJson } from './utils.js';
 import { openRecentActivity, addEntry } from './history.js';
 import { showToast, closeToast } from './toast.js';
 import { initTerminal, appendToOutput } from './terminal.js';
@@ -16,6 +15,7 @@ import { openFileBrowser } from './file-browser.js';
 import { showErrorDialog } from './dialog.js';
 import { setFriendlyNames, getFriendlyName } from './state.js';
 import { API_URLS } from './constants.js';
+import type { CatalogJson } from './types.js';
 
 let devMode = false;
 
@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   wireCustomKeybox();
   wireKeyboxInstallButton();
   await initI18n();
-  await Promise.all([initClock(), initNetwork(), populateProviders(), loadContributors()]).catch(err => console.warn('Init error:', err));
+  await Promise.all([initNetwork(), populateProviders(), loadContributors()]).catch(err => console.warn('Init error:', err));
   await initDevice();
   wireBlacklistToggle();
   wireSmartmergeEditor();
@@ -289,11 +289,9 @@ async function populateProviders() {
   }
 
   try {
-    const res = await fetch(API_URLS.KEY_CATALOG);
-    if (res.ok) {
-      const data = await res.json();
-      const entries: Array<{ source: string }> = Array.isArray(data.entries) ? data.entries : [];
-      const sources = [...new Set(entries.map(e => e.source))].sort();
+    const data = await fetchJson<CatalogJson>(API_URLS.KEY_CATALOG);
+    if (data?.entries) {
+      const sources = [...new Set(data.entries.map(e => e.source))].sort();
       const currentValue = select.value;
       renderProviderOptions(select, sources);
       select.value = currentValue;
@@ -486,11 +484,9 @@ async function openCustomKeyboxDialog() {
       let catalogInfo: any = null;
       if (serial) {
         try {
-          const catalogRes = await fetch(API_URLS.KEY_CATALOG);
-          if (catalogRes.ok) {
-            const catalogData = await catalogRes.json();
-            const entries: Array<{ serial: string; source: string; version: string; text: string; revoked: boolean }> = catalogData?.entries || [];
-            catalogInfo = entries.find(e => e.serial === serial) || null;
+          const catalogData = await fetchJson<CatalogJson>(API_URLS.KEY_CATALOG);
+          if (catalogData?.entries) {
+            catalogInfo = catalogData.entries.find(e => e.serial === serial) || null;
           }
         } catch (e) {
           console.warn('Catalog fetch failed:', e);

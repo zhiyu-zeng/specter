@@ -5,9 +5,9 @@ For full architecture reference, see [ARCHITECTURE.md](./ARCHITECTURE.md).
 ## Quick Reference
 
 | Area | Files | Lines |
-|---|---|---|
-| `src/lib/` | 5 shared libraries | ~340 total |
-| `src/features/` | 16 feature scripts | varies |
+|---|---|---|---|
+| `src/lib/` | 5 shared libraries | ~415 total |
+| `src/features/` | 18 feature scripts | varies |
 | `src/webroot/js/` | 21 TypeScript modules | ~2300 total |
 | `src/webroot/css/app.css` | 1 stylesheet | ~790 |
 | `src/webroot/index.html` | 1 HTML page | ~460 |
@@ -80,15 +80,21 @@ To create a new pipeline: write a text file in `src/pipelines/`, then call `sh o
 
 ```
 KernelSU / APatch:
-  service.sh         → immediate ro.* property resets
+  service.sh         → inline resetprop_if_diff for ro.* props
+                     → vbmeta fixer via read_vbmeta() (guarded)
+                     → exits early — boot-completed.sh handles post-boot
   boot-completed.sh  → apply_boot_hardening(), override.description
 
 Magisk:
-  service.sh         → ro.* resets + poll sys.boot_completed + GMS kill
-                       + recovery hiding + 120s delayed re-spoof
+  service.sh         → inline resetprop_if_diff for ro.* props
+                     → vbmeta fixer, additional hardening
+                     → poll sys.boot_completed + GMS kill
+                     + recovery hiding + 120s delayed re-spoof
 ```
 
 The `apply_boot_hardening()` function (in `lib/common.sh`) runs `settings put` and `resetprop --delete` for security hardening.
+
+⚠️ **Boot Safety:** Boot scripts must NOT call `apply_prop_hardening()`, `check_prop()`, `disable_rom_spoof_engines()`, or `persistprop()`. See [Boot Safety Contract](./ARCHITECTURE.md#boot-safety-contract) in ARCHITECTURE.md. All boot-time props use inline `resetprop_if_diff` which has full `2>/dev/null || true` guards.
 
 ## Config Persistence (`lib/config_env.sh`)
 
@@ -112,6 +118,8 @@ check_network || { log "FEATURE" "Error: No internet"; exit 1; }
 ### set -e
 
 All executable scripts use `set -e`. Commands whose failure is expected must be guarded with `|| true`.
+
+**Exception — Boot scripts** (`service.sh`, `boot-completed.sh`): Every `resetprop` call must use `resetprop_if_diff` (which has `2>/dev/null || true` guards internally). Calling `check_prop()` or `apply_prop_hardening()` from boot scripts will cause a bootloop — these functions lack error guards and `set -e` aborts on the first unguarded failure at a critical boot stage.
 
 ### Logging
 

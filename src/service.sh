@@ -11,18 +11,14 @@ log "SERVICE" "Setting boot properties"
 # ============================================================================
 
 # --- Bootloader / VBMeta state ---
-# Hide unlocked bootloader from apps and integrity checks
 resetprop_if_diff ro.boot.vbmeta.device_state locked
 resetprop_if_diff vendor.boot.vbmeta.device_state locked
 resetprop_if_diff ro.boot.verifiedbootstate green
 resetprop_if_diff vendor.boot.verifiedbootstate green
 resetprop_if_diff ro.boot.flash.locked 1
 resetprop_if_diff ro.boot.veritymode enforcing
-resetprop_if_diff ro.boot.veritymode.managed yes
 
 # --- Warranty & debug bits ---
-# Prevent apps detecting debug or engineering builds
-# Samsung warranty bit spoofing - required for Samsung device integrity
 resetprop_if_diff ro.boot.warranty_bit 0
 resetprop_if_diff ro.warranty_bit 0
 resetprop_if_diff ro.vendor.boot.warranty_bit 0
@@ -31,49 +27,22 @@ resetprop_if_diff ro.debuggable 0
 resetprop_if_diff ro.force.debuggable 0
 resetprop_if_diff ro.secure 1
 resetprop_if_diff ro.adb.secure 1
-
-# --- Build identity ---
-# Mask userdebug/eng builds as user release builds
 resetprop_if_diff ro.build.type user
 resetprop_if_diff ro.build.tags release-keys
-# Loop over all ro.*.build.type and ro.*.build.tags variants
-while IFS= read -r _prop; do
-  [ -z "$_prop" ] && continue
-  case "$_prop" in
-    *.build.type) resetprop_if_diff "$_prop" user ;;
-    *.build.tags) resetprop_if_diff "$_prop" release-keys ;;
-  esac
-done <<PROPS
-$(resetprop 2>/dev/null | grep -oE 'ro\.[^.]+\.build\.(type|tags)')
-PROPS
-unset _prop
-
-# --- Static vbmeta metadata ---
-# Always set to known-good values as fallback
-resetprop_if_diff ro.boot.vbmeta.size 4096
-resetprop_if_diff ro.boot.vbmeta.hash_alg sha256
-resetprop_if_diff ro.boot.vbmeta.avb_version 2.0
 
 # --- OEM-specific props ---
-# MIUI secureboot - Xiaomi devices check this for boot state
 resetprop_if_diff ro.secureboot.lockstate locked
-# avoid breaking Realme fingerprint scanners
 resetprop_if_diff ro.boot.realme.lockstate 1
 resetprop_if_diff ro.boot.realmebootstate green
-# avoid breaking OnePlus display modes
 resetprop_if_diff ro.is_ever_orange 0
-# Oppo/ColorOS fingerprint compatibility
-resetprop_if_diff ro.boot.vbmeta.device_state locked
 
 # --- Recovery mode hiding ---
-# Prevent apps from detecting device booted into recovery
 resetprop_if_match ro.bootmode recovery unknown
 resetprop_if_match ro.boot.bootmode recovery unknown
 resetprop_if_match vendor.boot.bootmode recovery unknown
 resetprop_if_match ro.boot.mode recovery unknown
 
 # --- USB / ADB lockdown ---
-# Disable debugging, OEM unlock, and restrict USB modes
 resetprop_if_diff sys.oem_unlock_allowed 0
 resetprop_if_diff ro.oem_unlock_supported 0
 resetprop_if_diff persist.sys.usb.config none
@@ -81,17 +50,53 @@ resetprop_if_diff sys.usb.config mtp
 resetprop_if_diff service.adb.root 0
 
 # --- Emulation detection ---
-# Specter's unique anti-emulation props
 resetprop_if_diff ro.kernel.qemu 0
 resetprop_if_diff ro.boot.qemu 0
+
 # --- SELinux ---
 resetprop_if_diff ro.boot.selinux enforcing
-# If SELinux is enforcing, set the build indicator
 [ "$(getprop ro.boot.selinux)" = "enforcing" ] && resetprop_if_diff ro.build.selinux 1
 
+# Protect SELinux policy files from userspace toggling
+if [ "$(toybox cat /sys/fs/selinux/enforce 2>/dev/null)" = "0" ]; then
+  chmod 640 /sys/fs/selinux/enforce 2>/dev/null || true
+  chmod 440 /sys/fs/selinux/policy 2>/dev/null || true
+fi
+
 # --- Crypto ---
-# Hide unencrypted state from apps checking ro.crypto.state
 resetprop_if_diff ro.crypto.state encrypted
+
+# --- Build identity — all variant props ---
+while IFS= read -r _prop; do
+  [ -z "$_prop" ] && continue
+  case "$_prop" in
+    *.build.type) resetprop_if_diff "$_prop" user ;;
+    *.build.tags) resetprop_if_diff "$_prop" release-keys ;;
+  esac
+done <<PROPS
+$(resetprop 2>/dev/null | grep -oE 'ro\.[^.]+\.build\.(type|tags)' || true)
+PROPS
+unset _prop
+
+# --- Additional hardening ---
+resetprop_if_diff ro.boot.veritymode.managed yes
+resetprop_if_diff sys.usb.adb.disabled 1
+resetprop_if_diff ro.hardware.virtual_device 0
+
+# --- Vbmeta fixer — read real size/digest from block device ---
+_vbmeta_out=$(read_vbmeta 2>/dev/null || echo "")
+if [ -n "$_vbmeta_out" ]; then
+  _vbsize="${_vbmeta_out%% *}"
+  _vbhash="${_vbmeta_out#* }"
+  resetprop -n ro.boot.vbmeta.size "$_vbsize" 2>/dev/null || true
+  resetprop_if_diff ro.boot.vbmeta.hash_alg sha256
+  resetprop_if_diff ro.boot.vbmeta.avb_version 2.0
+  if [ -n "$_vbhash" ] && [ ! -f "/data/adb/boot_hash" ]; then
+    resetprop -n ro.boot.vbmeta.digest "$_vbhash" 2>/dev/null || true
+  fi
+fi
+unset _vbmeta_out _vbsize _vbhash
+
 log "SERVICE" "Boot properties set"
 
 # ============================================================================
@@ -120,6 +125,19 @@ log "SERVICE" "Boot hardening applied"
 log "SERVICE" "Hiding recovery folders..."
 hide_recovery_folders
 log "SERVICE" "Recovery folders hidden"
+
+log "SERVICE" "Running boot-time features..."
+
+sh "$MODDIR/features/boot_hash.sh" 2>/dev/null || true
+sh "$MODDIR/features/security_patch.sh" 2>/dev/null || true
+
+disable_bootloader_spoofer
+
+sh "$MODDIR/features/suspicious_props.sh" >/dev/null 2>&1 || true
+
+block_rom_spoof_engines
+
+log "SERVICE" "Boot-time features done"
 
 # Delayed spoofing - 120s delay to re-apply props that system may have overridden
 (

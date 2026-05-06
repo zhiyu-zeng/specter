@@ -67,18 +67,6 @@
 
           <div class="info-grid">
 
-            <md-filled-card class="info-card">
-              <md-icon class="info-card__icon" aria-hidden="true">calendar_today</md-icon>
-              <p class="md-typescale-title-small info-card__label" data-i18n="home_clock_date">Date</p>
-              <p class="md-typescale-title-medium info-card__value" id="clock-date">—</p>
-            </md-filled-card>
-
-            <md-filled-card class="info-card">
-              <md-icon class="info-card__icon" aria-hidden="true">schedule</md-icon>
-              <p class="md-typescale-title-small info-card__label" data-i18n="home_clock_time">Time</p>
-              <p class="md-typescale-title-medium info-card__value" id="clock-time">—</p>
-            </md-filled-card>
-
             <md-filled-card id="version-info-card" class="info-card">
               <md-icon class="info-card__icon" aria-hidden="true">info</md-icon>
               <p class="md-typescale-title-small info-card__label" data-i18n="home_version">Module Version</p>
@@ -103,14 +91,18 @@
               <p class="md-typescale-title-medium info-card__value" id="root-value">—</p>
             </md-filled-card>
 
-          </div>
+            <md-filled-card class="info-card">
+              <md-icon class="info-card__icon" aria-hidden="true">security_update_good</md-icon>
+              <p class="md-typescale-title-small info-card__label" data-i18n="home_security_patch">Security Patch</p>
+              <p class="md-typescale-title-medium info-card__value" id="patch-value">—</p>
+            </md-filled-card>
 
-          <div id="boot-stage-bar" class="boot-stage-bar" style="display:none;margin-top:8px">
-            <span class="boot-stage-dot" data-stage="post-fs-data">post-fs-data</span>
-            <span class="boot-stage-sep">·</span>
-            <span class="boot-stage-dot" data-stage="service">service</span>
-            <span class="boot-stage-sep">·</span>
-            <span class="boot-stage-dot" data-stage="boot-completed">boot-completed</span>
+            <md-filled-card class="info-card" id="tee-status-card">
+              <md-icon class="info-card__icon" aria-hidden="true">security</md-icon>
+              <p class="md-typescale-title-small info-card__label" data-i18n="home_tee">TEE</p>
+              <p class="md-typescale-title-medium info-card__value" id="tee-value">—</p>
+            </md-filled-card>
+
           </div>
 
         </section>
@@ -290,6 +282,17 @@
               <div class="list-item-content">
                 <div class="toggle-text" data-i18n="advance_wdevinel1">Fix Widevine L1</div>
                 <span class="supporting-text" data-i18n="advance_wdevinel1_desc">Installs attestation keys for Widevine L1 DRM (Qualcomm devices only)</span>
+              </div>
+              <div class="spacer"></div>
+              <md-circular-progress indeterminate class="action-spinner hidden"></md-circular-progress>
+              <md-ripple></md-ripple>
+            </div>
+
+            <div class="list-item" data-script="suspicious_props.sh" data-destructive>
+              <div class="li-icon"><md-icon aria-hidden="true">cleaning_services</md-icon></div>
+              <div class="list-item-content">
+                <div class="toggle-text" data-i18n="advance_scan_clean_props">Scan & Clean Suspicious Props</div>
+                <span class="supporting-text" data-i18n="advance_scan_clean_props_desc">Scans for and removes leftover persistent props from modding tools, Xposed, or debug state</span>
               </div>
               <div class="spacer"></div>
               <md-circular-progress indeterminate class="action-spinner hidden"></md-circular-progress>

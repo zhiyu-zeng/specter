@@ -49,6 +49,8 @@ find src/ -name '*.sh' -exec shellcheck {} +
 
 All executable scripts use `set -e` for early error detection. Library scripts (`lib/*.sh`) do not.
 
+⚠️ **Boot Safety:** `service.sh` and `boot-completed.sh` run in critical boot phases. They must use inline `resetprop_if_diff` for props — never call `apply_prop_hardening()`, `check_prop()`, `disable_rom_spoof_engines()`, or `persistprop()`. See [Boot Safety Contract](./ARCHITECTURE.md#boot-safety-contract).
+
 ### Adding a New Feature
 
 1. Create a new file in `src/features/<name>.sh`

@@ -7,20 +7,14 @@
   "nav_settings": "Settings",
 
   "home_version": "Module Version",
-  "home_keybox_status": "Keybox Status",
-  "home_keybox_format": "Keybox Format",
-  "home_boot_stages": "Boot Stages",
-  "home_root_sol": "Root Method",
   "home_android": "Android",
   "home_kernel": "Kernel",
+  "home_tee": "TEE",
+  "home_security_patch": "Security Patch",
   "home_root": "Root",
   "home_refresh": "Refresh Info",
-  "home_refreshing": "Refreshing…",
-  "home_status": "Status",
   "home_status_online": "Online",
   "home_status_offline": "Offline",
-  "home_clock_date": "Date",
-  "home_clock_time": "Time",
 
   "menu_keybox": "Keybox",
   "menu_google_services": "Google Services",
@@ -68,7 +62,6 @@
   "advance_upd_rka": "Update RKA Config",
   "advance_upd_rka_desc": "Provisions Remote Key Attestation config",
 
-  "settings_title": "Settings",
   "settings_language": "Language",
   "settings_appearance": "Appearance",
   "settings_theme_mode": "Mode",
@@ -106,23 +99,15 @@
   "dialog_clear": "Clear",
   "dialog_close": "Close",
 
-  "simple_dialog_title": "Running…",
   "simple_dialog_wait": "This may take a moment",
   "simple_toast_error": "Failed",
   "simple_toast_view_details": "View Details",
   "history_title": "Recent Activity",
   "history_empty": "No activity yet - run an action to get started",
   "error_dialog_title": "Error Details",
-  "script_history_title": "Script History",
-  "script_history_empty": "No script history yet.",
 
   "toast_success": "Done",
-  "toast_error": "Failed",
-  "toast_timeout": "Timed out - check your module installation",
 
-  "role_founder_dev": "Founder & Developer",
-  "role_contributor_dev": "Module Developer",
-  "role_contributor_webui": "WebUI Developer",
   "role_Founder & Lead Developer": "Founder & Lead Developer",
 
   "custom_kb_title": "Custom Keybox",
@@ -132,7 +117,6 @@
   "custom_kb_no_file": "No file selected",
   "custom_kb_apply": "Apply",
   "custom_kb_clear": "Clear",
-  "custom_kb_applied": "Custom keybox configured",
   "custom_kb_cleared": "Custom keybox cleared",
   "custom_kb_detecting": "Detecting keybox...",
   "custom_kb_detected": "Keybox Detected",
@@ -146,5 +130,8 @@
   "custom_kb_no": "No",
   "custom_kb_yes": "Yes",
   "custom_kb_not_found": "Not Found in Catalog",
-  "custom_kb_not_found_desc": "This keybox could not be matched to any known source"
+  "custom_kb_not_found_desc": "This keybox could not be matched to any known source",
+
+  "advance_scan_clean_props": "Scan & Clean Suspicious Props",
+  "advance_scan_clean_props_desc": "Scan and remove leftover Xposed, ADB, LuckyTool, and modding tool traces"
 }

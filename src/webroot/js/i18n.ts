@@ -1,12 +1,12 @@
 import { cfgGet, cfgSet } from './cfg.js';
+import { fetchJson } from './utils.js';
 
 let currentStrings: Record<string, string> = {};
 let fallbackStrings: Record<string, string> = {};
 
 export async function initI18n() {
   try {
-    const res = await fetch(`lang/source/string.json?ts=${Date.now()}`);
-    fallbackStrings = await res.json();
+    fallbackStrings = await fetchJson(`lang/source/string.json?ts=${Date.now()}`) || {};
   } catch (e) { console.warn('Failed to load fallback strings:', e); fallbackStrings = {}; }
 
   const saved = await cfgGet('lang', 'auto') || 'auto';

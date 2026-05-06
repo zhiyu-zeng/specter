@@ -1,13 +1,7 @@
-import { escapeHtml } from './utils.js';
+import { escapeHtml, fetchJson } from './utils.js';
 import { getTranslation } from './i18n.js';
 import { openUrl } from './redirect.js';
-
-interface DevEntry {
-  name: string;
-  role: string;
-  github: string;
-  avatar: string;
-}
+import type { DevEntry } from './types.js';
 
 export async function loadContributors() {
   const grid = document.getElementById('contributors-grid');
@@ -15,8 +9,8 @@ export async function loadContributors() {
 
   let devs: DevEntry[] = [];
   try {
-    const res = await fetch(`json/dev.json?ts=${Date.now()}`);
-    devs = await res.json();
+    devs = await fetchJson<DevEntry[]>(`json/dev.json?ts=${Date.now()}`) || [];
+    if (!devs.length) { console.warn('Failed to load contributors'); return; }
   } catch {
     console.warn('Failed to load contributors');
     return;

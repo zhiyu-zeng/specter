@@ -1,35 +1,6 @@
 import { shellEscape } from './utils.js';
 import { EXEC_TIMEOUT_MS } from './constants.js';
-
-interface ModulePaths {
-  MODDIR: string;
-}
-
-interface ScriptResult {
-  success: boolean;
-  output?: string;
-  rawOutput: string;
-}
-
-interface ExecResult {
-  code?: number;
-  stdout: string;
-  stderr: string;
-}
-
-interface ChildProcess {
-  stdout: {
-    on(ev: 'data', fn: (data: string) => void): void;
-    emit(ev: 'data', data: string): void;
-  };
-  stderr: {
-    on(ev: 'data', fn: (data: string) => void): void;
-    emit(ev: 'data', data: string): void;
-  };
-  stdin: { on(): void; emit(): void };
-  on(ev: 'exit' | 'error', fn: (...args: any[]) => void): void;
-  emit(ev: string, ...args: any[]): void;
-}
+import type { ModulePaths, ScriptResult, ExecResult, ChildProcess } from './types.js';
 
 let MODULE: ModulePaths | null = null;
 
