@@ -15,7 +15,7 @@ if [ "$current_month" -eq 1 ]; then
   target_month=12
   target_year=$((current_year - 1))
 else
-  target_month=$((10#$current_month - 1))
+  target_month=$(( ${current_month#0} - 1 ))
   target_year=$current_year
 fi
 

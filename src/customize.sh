@@ -1,5 +1,5 @@
 # shellcheck shell=sh
-MODDIR="$MODPATH"
+MODDIR="$MODPATH"  # used by sourced libs
 . "$MODPATH/lib/common.sh"
 . "$MODPATH/lib/urls.sh"
 . "$MODPATH/lib/paths.sh"
@@ -127,8 +127,6 @@ esac
 unset _tg_choice
 
 mkdir -p "$MODPATH/webroot/json"
-RUNTIME_DIR=$(printf '%s' "$MODPATH" | sed 's|/modules_update/|/modules/|')
-
 # Interactive conflict resolution for each detected module
 for _cm_mod in "zygisk_nohello|NoHello" "tsupport-advance|TSupport-Advance" "treat_wheel|TreatWheel" "sensitive_props|Sensitive Props" "Yurikey|Yurikey Manager"; do
   _cm_id="${_cm_mod%|*}"

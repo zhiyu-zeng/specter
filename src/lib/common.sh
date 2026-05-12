@@ -357,6 +357,7 @@ run_device_info() {
   return 1
 }
 
+# shellcheck disable=SC3057,SC3052
 _parse_serial() {
   _h="$1"
   # Check if shell supports string slicing — needed for DER parsing below
@@ -469,12 +470,9 @@ disable_bootloader_spoofer() {
     cmd appops set com.wmods.wppenhacer POST_NOTIFICATIONS deny 2>/dev/null || true
   else
     # Fallback for older Android — use pm + sed
-    for _pkg in es.chiteroman.bootloaderspoofer; do
-      if grep -q "$_pkg" /data/system/packages.list 2>/dev/null; then
-        timeout 5 pm uninstall --user 0 "$_pkg" >/dev/null 2>&1 || true
-      fi
-    done
-    unset _pkg
+    if grep -q "es.chiteroman.bootloaderspoofer" /data/system/packages.list 2>/dev/null; then
+      timeout 5 pm uninstall --user 0 "es.chiteroman.bootloaderspoofer" >/dev/null 2>&1 || true
+    fi
     _wpp_xml="/data/data/com.wmods.wppenhacer/shared_prefs/com.wmods.wppenhacer_preferences.xml"
     if [ -f "$_wpp_xml" ] && grep -q 'name="bootloader_spoofer" value="true"' "$_wpp_xml" 2>/dev/null; then
       sed -i 's/\(name="bootloader_spoofer" value=\)"true"/\1"false"/' "$_wpp_xml" 2>/dev/null || true

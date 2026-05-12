@@ -1,7 +1,6 @@
 #!/system/bin/sh
 MODULE_ROOT="${0%/*}"
 MODULE_ROOT="${MODULE_ROOT%/webroot/common}"
-MODDIR="$MODULE_ROOT"
 . "$MODULE_ROOT/lib/paths.sh"
 . "$MODULE_ROOT/lib/config_env.sh"
 . "$MODULE_ROOT/lib/common.sh"
