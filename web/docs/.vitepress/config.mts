@@ -1,11 +1,11 @@
 import { defineConfig } from "vitepress";
 
 export default defineConfig({
-  base: "/specter/",
+  base: "/",
   title: "Specter",
   description: "Unified Play Integrity and root hiding stack for Android",
   head: [
-    ["link", { rel: "icon", href: "/specter/favicon.svg", type: "image/svg+xml" }],
+    ["link", { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" }],
   ],
   vite: {
     publicDir: ".vitepress/public",
