@@ -590,6 +590,11 @@ section:not([hidden]) {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  flex: 1;
+}
+
+.list-item--toggle .spacer {
+  display: none;
 }
 
 .toggle-text {
