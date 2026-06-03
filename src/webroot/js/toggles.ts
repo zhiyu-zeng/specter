@@ -1,10 +1,6 @@
 import { cfgGet, cfgSet, cfgInvalidate } from './cfg.js';
 import { CONTROL_TOGGLES } from './constants.js';
-import { getTranslation } from './i18n.js';
-import { showToast } from './toast.js';
 import { setDevMode } from './state.js';
-
-const t = (key: string, fallback: string): string => getTranslation(key) || fallback;
 
 export function wireControlToggles() {
   for (const { id, key, default: def } of CONTROL_TOGGLES) {

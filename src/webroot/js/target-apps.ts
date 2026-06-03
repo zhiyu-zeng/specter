@@ -2,7 +2,6 @@ import { exec, getModuleDir } from './bridge.js';
 import { shellEscape, fetchJson } from './utils.js';
 import { showToast } from './toast.js';
 import { getTranslation } from './i18n.js';
-import { API_URLS } from './constants.js';
 import { appendToOutput } from './terminal.js';
 
 type TargetState = 'unchecked' | 'bare' | 'conditional' | 'force';
@@ -47,9 +46,9 @@ function t(key: string, fallback: string): string {
   return getTranslation(key) || fallback;
 }
 
-function nextState(current: AppState, mode: Mode): AppState {
+function nextState(current: AppState, _mode: Mode): AppState {
   const idx = BLACKLIST_STATE_ORDER.indexOf(current as BlacklistState);
-  return BLACKLIST_STATE_ORDER[(idx + 1) % BLACKLIST_STATE_ORDER.length];
+  return BLACKLIST_STATE_ORDER[(idx + 1) % BLACKLIST_STATE_ORDER.length]!;
 }
 
 function stateIcons(state: AppState, mode: Mode): string {
@@ -191,7 +190,7 @@ export async function openTargetAppsManager() {
 
   requestAnimationFrame(() => overlay.classList.add('ta-overlay--open'));
   document.documentElement.style.overflow = 'hidden';
-  (window as any).isOverlayOpen = true;
+  window.isOverlayOpen = true;
   history.pushState({ overlay: 'target-apps' }, '');
   appendToOutput('[TARGET] Opened App Targeting overlay');
 
@@ -203,7 +202,7 @@ export async function openTargetAppsManager() {
   let blPkgs = new Set<string>();
 
   function closeOverlay() {
-    (window as any).isOverlayOpen = false;
+    window.isOverlayOpen = false;
     window.removeEventListener('popstate', closeOverlay);
     overlay.classList.remove('ta-overlay--open');
     document.documentElement.style.overflow = '';
@@ -304,7 +303,7 @@ export async function openTargetAppsManager() {
     const { stdout } = await exec('magisk --denylist ls 2>/dev/null | awk -F\'|\' \'{print $1}\' | grep -v "isolated" | sort -u || echo ""');
     const pkgs = stdout.split('\n').map(s => s.trim()).filter(Boolean);
     if (pkgs.length === 0) {
-      showToast(t('ta_prompt_denylist_failed', 'Failed to read DenyList'), { icon: 'error', type: 'error' as any, autoCloseDelay: 3000 });
+      showToast(t('ta_prompt_denylist_failed', 'Failed to read DenyList'), { icon: 'error', type: 'error', autoCloseDelay: 3000 });
       appendToOutput('[TARGET] DenyList: failed to read', true);
     } else {
       let count = 0;
@@ -316,7 +315,7 @@ export async function openTargetAppsManager() {
       }
       appendToOutput(`[TARGET] Imported ${count} apps from DenyList`);
       applyFilters();
-      showToast(t('ta_prompt_denylist_imported', 'DenyList apps selected'), { icon: 'check_circle', type: 'success' as any, autoCloseDelay: 2000 });
+      showToast(t('ta_prompt_denylist_imported', 'DenyList apps selected'), { icon: 'check_circle', type: 'success', autoCloseDelay: 2000 });
     }
     closeTapMenu();
   });
@@ -467,7 +466,8 @@ export async function openTargetAppsManager() {
           applyAppState('bare');
         } else {
           const idx = TARGET_MODE_ORDER.indexOf(app.state as TargetState);
-          applyAppState(TARGET_MODE_ORDER[(idx + 1) % TARGET_MODE_ORDER.length]);
+          const next = TARGET_MODE_ORDER[(idx + 1) % TARGET_MODE_ORDER.length];
+          if (next) applyAppState(next);
         }
       });
 
@@ -548,11 +548,11 @@ export async function openTargetAppsManager() {
       const content = bl.join('\n');
       try {
         const result = await exec(`printf '%s' ${shellEscape(content)} | base64 -w0`);
-        const b64 = (result as any).stdout || '';
+        const b64 = result.stdout || '';
         await exec(`mkdir -p /data/adb/Specter && printf '%s' "${b64}" | base64 -d > /data/adb/Specter/blacklist.txt`);
         await exec('mkdir -p /data/adb/Specter && touch /data/adb/Specter/blacklist_enabled');
         appendToOutput(`[TARGET] Wrote ${bl.length} entries to blacklist.txt`);
-        showToast(t('toast_blacklist_saved', 'Blacklist saved'), { icon: 'check_circle', type: 'success' as any, autoCloseDelay: 2500 });
+        showToast(t('toast_blacklist_saved', 'Blacklist saved'), { icon: 'check_circle', type: 'success', autoCloseDelay: 2500 });
       } catch (e) {
         appendToOutput(`[TARGET] Failed to save blacklist: ${e}`, true);
       }
@@ -572,7 +572,7 @@ export async function openTargetAppsManager() {
     try {
       await exec(`cat > /data/adb/tricky_store/target.txt << 'TEOF'\n${content}\nTEOF`);
       appendToOutput(`[TARGET] Wrote ${lines.length} entries to target.txt`);
-      showToast(t('ta_prompt_saved', 'Target list saved'), { icon: 'check_circle', type: 'success' as any, autoCloseDelay: 2500 });
+      showToast(t('ta_prompt_saved', 'Target list saved'), { icon: 'check_circle', type: 'success', autoCloseDelay: 2500 });
       await exec(`sh ${shellEscape(getModuleDir() + '/refresh_desc.sh')}`);
     } catch (e) {
       appendToOutput(`[TARGET] Failed to save target list: ${e}`, true);

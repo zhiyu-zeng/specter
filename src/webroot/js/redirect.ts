@@ -1,4 +1,5 @@
 import { shellEscape } from './utils.js';
+import { setGlobal, deleteGlobal } from './window-global.js';
 
 const ALLOWED_HOSTS = [
   'github.com',
@@ -26,7 +27,7 @@ export function openUrl(rawUrl: string) {
 
   if (window.ksu?.exec) {
     const cbName = `rd_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-    window[cbName] = function() { delete window[cbName]; };
+    setGlobal(cbName, function() { deleteGlobal(cbName); });
     window.ksu.exec(
       `am start -a android.intent.action.VIEW -d ${shellEscape(url.href)}`,
       '{}',

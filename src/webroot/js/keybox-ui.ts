@@ -1,5 +1,5 @@
 import { getModuleDir, exec } from './bridge.js';
-import { cfgSet, cfgGet } from './cfg.js';
+import { cfgSet } from './cfg.js';
 import { getTranslation } from './i18n.js';
 import { shellEscape, fetchJson } from './utils.js';
 import { showToast } from './toast.js';
@@ -28,15 +28,13 @@ export async function populateProviders() {
   const select = document.getElementById('kb-provider') as HTMLSelectElement | null;
   if (!select) return;
 
-  const saved = await cfgGet('kb_provider', 'auto') || 'auto';
-
   if (!providerSelects.has(select)) {
     providerSelects.add(select);
     select.addEventListener('change', () => { cfgSet('kb_provider', select.value); });
   }
 
   try {
-    const data = await fetchJson<CatalogJson>(API_URLS.KEY_CATALOG, 300000);
+    const data = await fetchJson<CatalogJson>(API_URLS.KEY_CATALOG!, 300000);
     if (data?.entries) {
       const sources = [...new Set(data.entries.map(e => e.source))].sort();
       const currentValue = select.value;
@@ -165,7 +163,7 @@ export async function openCustomKeyboxDialog() {
     cfgSet('kb_custom_type', '');
     cfgSet('kb_custom_value', '');
     cfgSet('kb_private', '');
-    showToast(t('custom_kb_cleared', 'Custom keybox cleared'), { icon: 'info', type: 'info' as any, autoCloseDelay: 2500 });
+    showToast(t('custom_kb_cleared', 'Custom keybox cleared'), { icon: 'info', type: 'info', autoCloseDelay: 2500 });
     dialog.close();
   });
 
@@ -174,7 +172,7 @@ export async function openCustomKeyboxDialog() {
     const text = urlInput.value.trim();
 
     if (!text) {
-      showToast(t('toast_enter_url', 'Enter a URL or device path'), { icon: 'error', type: 'error' as any, autoCloseDelay: 2500 });
+      showToast(t('toast_enter_url', 'Enter a URL or device path'), { icon: 'error', type: 'error', autoCloseDelay: 2500 });
       return;
     }
 
@@ -211,12 +209,12 @@ export async function openCustomKeyboxDialog() {
     cfgSet('kb_custom_value', text);
     const result: any = await exec(`sh ${shellEscape(moddir + '/features/keybox.sh')}`);
     if (result.code === 0) {
-      showToast(t('custom_kb_installed', 'Custom keybox installed'), { icon: 'check_circle', type: 'success' as any, autoCloseDelay: 3000 });
+      showToast(t('custom_kb_installed', 'Custom keybox installed'), { icon: 'check_circle', type: 'success', autoCloseDelay: 3000 });
       await exec(`sh ${shellEscape(moddir + '/features/keybox_info.sh')}`).catch(() => {});
       await exec(`sh ${shellEscape(moddir + '/refresh_desc.sh')}`).catch(() => {});
       await refreshKeyboxStatus();
     } else {
-      showToast(t('custom_kb_install_failed', 'Install failed'), { icon: 'error', type: 'error' as any, autoCloseDelay: 5000 });
+      showToast(t('custom_kb_install_failed', 'Install failed'), { icon: 'error', type: 'error', autoCloseDelay: 5000 });
     }
     dialog.close();
   });

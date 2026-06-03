@@ -89,7 +89,7 @@ export function wireNavigation() {
   }
 
   window.addEventListener('popstate', () => {
-    const openDialog = document.querySelector('md-dialog[open]') as any;
+    const openDialog = document.querySelector('md-dialog[open]') as (HTMLElement & { close(): void }) | null;
     if (openDialog) {
       openDialog.close();
       if (getCurrentPage() !== 'home-page') {
@@ -98,7 +98,7 @@ export function wireNavigation() {
       return;
     }
 
-    if ((window as any).isOverlayOpen) return;
+    if (window.isOverlayOpen) return;
     exitStatePushed = false;
     if (getCurrentPage() === 'home-page') {
       window.close();

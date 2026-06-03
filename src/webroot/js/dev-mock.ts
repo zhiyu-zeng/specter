@@ -1,3 +1,5 @@
+import { getGlobal } from './window-global.js';
+
 const MOCK_TARGET_TXT = [
   'com.example.one',
   'com.example.two!',
@@ -109,9 +111,9 @@ const APP_LABELS_CACHE_PATH = '/data/adb/Specter/app_labels.json';
 
 if (typeof window.ksu === 'undefined') {
   const ksuMock = {
-    exec(cmd: string, opts: string, cbName: string) {
+    exec(cmd: string, _opts: string, cbName: string) {
       setTimeout(() => {
-        const cb = window[cbName] as ((...args: any[]) => void) | undefined;
+        const cb = getGlobal<(...args: unknown[]) => void>(cbName);
         if (typeof cb !== 'function') return;
 
         if (cmd.includes('target.txt')) {
@@ -137,8 +139,8 @@ if (typeof window.ksu === 'undefined') {
         }
       }, 50);
     },
-    spawn(cmd: string, argsJson: string, opts: string, spName: string) {
-      const child = window[spName] as any;
+    spawn(_cmd: string, _argsJson: string, _opts: string, spName: string) {
+      const child = getGlobal<{ stdout?: { emit: (ev: string, data: string) => void }; emit?: (ev: string, code: number) => void }>(spName);
       if (child) {
         setTimeout(() => {
           child.stdout?.emit?.('data', '');

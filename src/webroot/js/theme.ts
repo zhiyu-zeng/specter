@@ -35,7 +35,7 @@ export async function initThemeUI() {
 
   if (customElements.get('md-filter-chip')) {
     document.querySelectorAll('.preset-chip').forEach(chip => {
-      (chip as any).selected = (chip as HTMLElement).dataset.preset === preset;
+      (chip as HTMLElement & { selected: boolean }).selected = (chip as HTMLElement).dataset.preset === preset;
     });
   }
 
@@ -44,7 +44,7 @@ export async function initThemeUI() {
     const group = document.getElementById('theme-mode-group');
     if (group) {
       group.querySelectorAll('md-outlined-segmented-button').forEach(btn => {
-        (btn as any).selected = btn.getAttribute('value') === mode;
+        (btn as HTMLElement & { selected: boolean }).selected = btn.getAttribute('value') === mode;
       });
     }
   }
@@ -95,7 +95,7 @@ function applyMode(mode: string) {
 function applyPreset(preset: string) {
   if (preset === 'monet') {
     document.querySelectorAll('.preset-chip').forEach(chip => {
-      (chip as any).selected = (chip as HTMLElement).dataset.preset === 'monet';
+      (chip as HTMLElement & { selected: boolean }).selected = (chip as HTMLElement).dataset.preset === 'monet';
     });
     applyMonetPreset(document.documentElement.getAttribute('data-theme') || 'dark');
     return;
@@ -104,7 +104,7 @@ function applyPreset(preset: string) {
   document.documentElement.setAttribute('data-theme-preset', preset);
   cfgSet('theme_preset', preset);
   document.querySelectorAll('.preset-chip').forEach(chip => {
-    (chip as any).selected = (chip as HTMLElement).dataset.preset === preset;
+    (chip as HTMLElement & { selected: boolean }).selected = (chip as HTMLElement).dataset.preset === preset;
   });
   const isDark = document.documentElement.getAttribute('data-theme-resolved') === 'dark';
   applyNamedPreset(preset, isDark);
@@ -137,7 +137,7 @@ async function extractMonetColor(): Promise<string | null> {
     ].join(' || ');
 
     const result = await exec(cmd);
-    const hex = ((result as any).stdout || '').trim();
+    const hex = (result.stdout || '').trim();
     if (!hex) return null;
 
     let argb: number | undefined;

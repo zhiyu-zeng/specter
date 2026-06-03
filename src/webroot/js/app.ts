@@ -171,16 +171,15 @@ async function wireConflictToggles() {
 
         const cmd = `sh ${shellEscape(moddir + '/webroot/common/conflicts.sh')} set ${shellEscape(mod.key)} ${shellEscape(choice)}`;
         const result = await exec(cmd);
-        const code = (result as any).code;
+        const code = result.code;
         if (typeof code === 'number' && code !== 0) {
-          const err = (result as any).stderr || 'Failed to update';
-          throw new Error(String(err));
+          const err = result.stderr || 'Failed to update';          throw new Error(String(err));
         }
 
         hint.textContent = isModule ? `${t('conflict_priority_module', 'Priority →')} ${mod.friendlyName}` : t('conflict_priority_specter', 'Priority → Specter');
-        showToast(`${mod.friendlyName}: ${isModule ? t('conflict_toast_module_handles', 'Module handles it') : t('conflict_toast_specter_handles', 'Specter handles it')}`, { icon: 'check_circle', type: 'success' as any, autoCloseDelay: 2500 });
+        showToast(`${mod.friendlyName}: ${isModule ? t('conflict_toast_module_handles', 'Module handles it') : t('conflict_toast_specter_handles', 'Specter handles it')}`, { icon: 'check_circle', type: 'success', autoCloseDelay: 2500 });
       } catch (e) {
-        showToast(t('toast_failed_update', 'Failed to update'), { icon: 'error', type: 'error' as any, autoCloseDelay: 3000 });
+        showToast(t('toast_failed_update', 'Failed to update'), { icon: 'error', type: 'error', autoCloseDelay: 3000 });
         sw.selected = !sw.selected;
       } finally {
         sw.disabled = false;

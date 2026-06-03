@@ -1,5 +1,31 @@
 # v1.4.4.07
 
+## Type Safety & Code Quality
+
+- **Zero `as any` casts**: all ~71 `as any` occurrences eliminated across 30+ TypeScript files. Replaced with proper typed intersections (`HTMLElement & { selected: boolean }`, `HTMLButtonElement`), union types (`type: 'success' | 'error' | 'info' | 'warning'`), and explicit type assertions
+- **`ChildProcess` overloads**: `on('exit')` and `on('error')` events now have proper parameter types instead of `(...args: unknown[]) => void`
+- **`tsconfig.json` strictness**: enabled `noUncheckedIndexedAccess`, `noUnusedLocals`, `noUnusedParameters` — codebase compiles cleanly with zero errors
+- **`window-global.ts`** helper: single typed abstraction for dynamic window property access (`getGlobal<T>`, `setGlobal`, `deleteGlobal`), eliminating all `window as unknown as Record<string, unknown>` patterns from consumer modules
+- **Typed error hierarchy**: `SpecterError` (base) → `BridgeError` / `ScriptError` / `TimeoutError` / `ConfigError` with machine-readable `.code` and optional `.context` payload — replaces bare `Error` throws throughout bridge.ts
+- **TSDoc documentation**: all public API exports across 6 core modules (`bridge.ts`, `cfg.ts`, `toast.ts`, `utils.ts`, `color-utils.ts`, `window-global.ts`) now have typedoc-style comments
+
+## Shell
+
+- **`version_ge()`**: pure POSIX-sh implementation (IFS splitting + arithmetic comparison) — no longer depends on `awk`, fixing compatibility with KernelSU/APatch environments where toybox lacks awk
+- **`bridge.ts` callback system**: rewritten from fragile `window[cbName]` global namespace pollution to a private `Map<string, callback>` registry with individually-named `__sp_*` globals and explicit cleanup on completion/timeout/error
+
+## Testing
+
+- **vitest infrastructure**: 7 test files, 65 tests covering bridge integration (KernelSU mock with exec/runScript/spawnScript), config caching, toast notification lifecycle, colour preset matching, utility functions, window-global helper, and accessibility patterns
+- **CI integration**: vitest step added to `.github/workflows/build-test.yml` alongside existing shell test runner
+- **Shell tests**: 16 tests across 12 test files, all passing
+
+## Infrastructure
+
+- **`vitest.config.ts`** with happy-dom environment for DOM-dependent tests
+- **`package.json`** — `npm test` and `npm run test:watch` scripts added
+- **CI badge** added to README
+
 ## Removed
 - **Recovery feature deleted entirely**: `src/features/recovery.sh`, `hide_recovery_folders()` from `props.sh`, recovery toggle from WebUI (index.html, constants.ts, all lang files), `recovery_detected` from device-info JSON + TypeScript types + mock, stale references in cleanup.sh, boot_core.sh dispatch, and all recovery tests
 - **Prop handler removed from scheduler**: boot state props are one-time at boot, no need for hourly re-runs (`scheduler.sh` prop_handler task deleted)

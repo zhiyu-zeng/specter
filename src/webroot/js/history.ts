@@ -114,7 +114,7 @@ export async function openRecentActivity(devMode = false) {
   const list = document.createElement('div');
   list.className = 'activity-list';
 
-  entries.forEach((entry, index) => {
+  entries.forEach((entry) => {
     const i18nKey = getFriendlyNames()[entry.script];
     const friendlyName = (i18nKey && getTranslation(i18nKey)) || entry.script;
     const isError = isErrorOutput(entry.output);
@@ -150,9 +150,9 @@ export async function openRecentActivity(devMode = false) {
     copyBtn!.addEventListener('click', (e) => {
       e.stopPropagation();
       copyToClipboard(entry.output).then(() => {
-        showToast(getTranslation('history_copied') || 'Copied!', { icon: 'check_circle', type: 'success' as any, autoCloseDelay: 2000 });
+        showToast(getTranslation('history_copied') || 'Copied!', { icon: 'check_circle', type: 'success', autoCloseDelay: 2000 });
       }).catch(() => {
-        showToast(getTranslation('history_copy_failed') || 'Failed to copy', { icon: 'error', type: 'error' as any, autoCloseDelay: 2000 });
+        showToast(getTranslation('history_copy_failed') || 'Failed to copy', { icon: 'error', type: 'error', autoCloseDelay: 2000 });
       });
     });
 
@@ -293,7 +293,8 @@ export function renderActivityPreview() {
 
   const visible = Math.min(count, VISIBLE_COUNT);
   for (let i = 0; i < visible; i++) {
-    container.appendChild(createItem(allEntries[i]));
+    const entry = allEntries[i];
+    if (entry) container.appendChild(createItem(entry));
   }
 
   if (count > VISIBLE_COUNT) {
@@ -308,7 +309,8 @@ export function renderActivityPreview() {
       expanded = !expanded;
       if (expanded && !hiddenCreated) {
         for (let i = VISIBLE_COUNT; i < count; i++) {
-          container.insertBefore(createItem(allEntries[i]), toggle);
+          const entry = allEntries[i];
+          if (entry) container.insertBefore(createItem(entry), toggle);
         }
         hiddenCreated = true;
       }

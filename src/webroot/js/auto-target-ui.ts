@@ -64,7 +64,7 @@ export function openAutoTargetDialog() {
       dialog.addEventListener('close', () => document.body.removeChild(dialog));
 
       const toggle = dialog.querySelector('#at-toggle') as MdSwitch;
-      const intervalField = dialog.querySelector('#at-interval') as any;
+      const intervalField = dialog.querySelector('#at-interval') as HTMLInputElement;
       const saveBtn = dialog.querySelector('#at-save') as HTMLButtonElement;
       const cancelBtn = dialog.querySelector('#at-cancel') as HTMLButtonElement;
 
@@ -72,14 +72,14 @@ export function openAutoTargetDialog() {
 
       saveBtn.addEventListener('click', async () => {
         const newEnabled = toggle.selected ? '1' : '0';
-        const newInterval = parseInt((intervalField as any).value || '15', 10);
+        const newInterval = parseInt(intervalField.value || '15', 10);
         const clampedInterval = Math.max(3, newInterval);
 
         saveBtn.disabled = true;
 
         const modDir = getModuleDir();
         if (!modDir) {
-          showToast(t('simple_toast_error', 'Failed'), { icon: 'error', type: 'error' as any, autoCloseDelay: 3000 });
+          showToast(t('simple_toast_error', 'Failed'), { icon: 'error', type: 'error', autoCloseDelay: 3000 });
           saveBtn.disabled = false;
           return;
         }
@@ -97,10 +97,10 @@ export function openAutoTargetDialog() {
           cfgInvalidate('toggle_auto_target');
           cfgInvalidate('auto_target_interval');
 
-          showToast(t('auto_target_saved', 'Auto targeting settings saved'), { icon: 'check_circle', type: 'success' as any, autoCloseDelay: 2500 });
+          showToast(t('auto_target_saved', 'Auto targeting settings saved'), { icon: 'check_circle', type: 'success', autoCloseDelay: 2500 });
           dialog.close();
         } catch (e) {
-          showToast(t('simple_toast_error', 'Failed'), { icon: 'error', type: 'error' as any, autoCloseDelay: 3000 });
+          showToast(t('simple_toast_error', 'Failed'), { icon: 'error', type: 'error', autoCloseDelay: 3000 });
         } finally {
           saveBtn.disabled = false;
         }

@@ -63,10 +63,10 @@ export function openRomFingerprintDialog() {
           cfgSet('rom_fingerprint_prefix', p.selected ? '1' : '0');
           cfgInvalidate('rom_fingerprint_hexpatch');
           cfgInvalidate('rom_fingerprint_prefix');
-          showToast(t('toast_success', 'Done'), { icon: 'check_circle', type: 'success' as any, autoCloseDelay: 2500 });
+          showToast(t('toast_success', 'Done'), { icon: 'check_circle', type: 'success', autoCloseDelay: 2500 });
           dialog.close();
         } catch (e) {
-          showToast(t('simple_toast_error', 'Failed'), { icon: 'error', type: 'error' as any, autoCloseDelay: 3000 });
+          showToast(t('simple_toast_error', 'Failed'), { icon: 'error', type: 'error', autoCloseDelay: 3000 });
         } finally {
           saveBtn.disabled = false;
         }

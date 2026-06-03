@@ -69,7 +69,7 @@ function applyTranslations() {
     if (!val) return;
 
     if (el.tagName === 'MD-NAVIGATION-TAB' || el.tagName === 'MD-ASSIST-CHIP' || el.tagName === 'MD-FILTER-CHIP') {
-      (el as any).label = val;
+      (el as HTMLElement & { label: string }).label = val;
       setAriaLabel(el, val);
       return;
     }
@@ -93,7 +93,7 @@ function applyTranslations() {
     const key = (el as HTMLElement).dataset.i18nPlaceholder;
     if (!key) return;
     const val = currentStrings[key] || fallbackStrings[key];
-    if (val) (el as any).placeholder = val;
+    if (val) (el as HTMLInputElement).placeholder = val;
   });
 }
 

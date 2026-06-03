@@ -3,11 +3,16 @@ import presetData from './presets.json';
 const KEYS: string[] = presetData.keys;
 const DATA: Record<string, string[]> = presetData.data;
 
+/** Look up the CSS custom-property map for a colour preset in light or dark mode. Returns `null` for unknown presets. */
 export function getPresetColors(preset: string, isDark: boolean): Record<string, string> | null {
   const arr = DATA[preset + '_' + (isDark ? 'dark' : 'light')];
   if (!arr) return null;
   const vars: Record<string, string> = {};
-  for (let i = 0; i < KEYS.length; i++) vars[KEYS[i]] = arr[i];
+  for (let i = 0; i < KEYS.length; i++) {
+    const k = KEYS[i];
+    const v = arr[i];
+    if (k && v) vars[k] = v;
+  }
   return vars;
 }
 
@@ -34,6 +39,7 @@ function argbToHsl(argb: number): [number, number, number] {
   return [h * 360, s * 100, l * 100];
 }
 
+/** Return the name of the preset palette closest to a hex colour seed (e.g. `'#1157CE'` → `'blue'`). */
 export function presetClosestTo(hexSeed: string): string {
   const argb = parseInt(hexSeed.startsWith('#') ? hexSeed.slice(1) : hexSeed, 16) | 0xFF000000;
   const [hue, sat] = argbToHsl(argb);

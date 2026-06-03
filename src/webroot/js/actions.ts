@@ -7,8 +7,6 @@ import { escapeHtml } from './utils.js';
 import { getTranslation } from './i18n.js';
 import { getFriendlyName, isDevMode, setFriendlyNames } from './state.js';
 
-const t = (key: string, fallback: string): string => getTranslation(key) || fallback;
-
 async function confirmDestructive(friendlyName: string): Promise<boolean> {
   return new Promise(resolve => {
     const dialog = document.createElement('md-dialog');
@@ -103,7 +101,7 @@ export async function runSimpleAction(scriptName: string, _item: HTMLElement, _s
     if (code !== 0) {
       const errorMsg = lines.find(l => l.includes('Error')) || lines[lines.length - 1] || friendlyName;
       showToast(`${getTranslation('simple_toast_error') || 'Failed'}: ${errorMsg}`, {
-        icon: 'error', type: 'error' as any,
+        icon: 'error', type: 'error',
         action: getTranslation('simple_toast_view_details') || 'View Details',
         autoCloseDelay: 8000,
         onActionClick: () => {
@@ -112,7 +110,7 @@ export async function runSimpleAction(scriptName: string, _item: HTMLElement, _s
       });
     } else {
       showToast(getTranslation('toast_success') || 'Done', {
-        icon: 'check_circle', type: 'success' as any, autoCloseDelay: 3000,
+        icon: 'check_circle', type: 'success', autoCloseDelay: 3000,
       });
     }
   });
@@ -122,7 +120,7 @@ export async function runSimpleAction(scriptName: string, _item: HTMLElement, _s
     addEntry(scriptName, msg);
     if (dialog) dialog.close();
     showToast(`${getTranslation('simple_toast_error') || 'Failed'}: ${friendlyName}`, {
-      icon: 'error', type: 'error' as any,
+      icon: 'error', type: 'error',
       action: getTranslation('simple_toast_view_details') || 'View Details',
       autoCloseDelay: 8000,
       onActionClick: () => {
@@ -136,7 +134,7 @@ export function wireActions() {
   document.querySelectorAll('.list-item[data-script]').forEach(item => {
     const el = item as HTMLElement;
     item.addEventListener('click', async (_e) => {
-      if ((el as any).disabled) return;
+      if ((el as HTMLButtonElement).disabled) return;
       const scriptName = el.dataset.script || '';
       const isDestructive = el.hasAttribute('data-destructive');
       if (isDestructive) {
@@ -146,7 +144,7 @@ export function wireActions() {
         if (!confirmed) return;
       }
       const spinner = item.querySelector('.action-spinner') as HTMLElement | null;
-      (el as any).disabled = true;
+      (el as HTMLButtonElement).disabled = true;
       spinner?.classList.remove('hidden');
       try {
         if (isDevMode()) {
@@ -157,7 +155,7 @@ export function wireActions() {
       } catch (_err) {
         console.warn('Action error:', _err);
       } finally {
-        (el as any).disabled = false;
+        (el as HTMLButtonElement).disabled = false;
         spinner?.classList.add('hidden');
       }
     });

@@ -107,7 +107,7 @@ export async function openFileBrowser(onSelect: (path: string) => void) {
     }
     try {
       const result = await exec(`ls -1p ${shellEscape(path)} 2>/dev/null | head -200`);
-      const stdout = (result as any).stdout || '';
+      const stdout = result.stdout || '';
       entries = stdout.split('\n').filter(Boolean).map((line: string) => ({
         name: line.replace(/\/$/, ''),
         isFolder: line.endsWith('/') && line !== '../',

@@ -9,6 +9,8 @@
 </p>
 
 [![latest release](https://img.shields.io/github/v/release/dpejoh/specter?label=Release&logo=github)](https://github.com/dpejoh/specter/releases/latest)
+[![CI](https://github.com/dpejoh/specter/actions/workflows/build-test.yml/badge.svg)](https://github.com/dpejoh/specter/actions/workflows/build-test.yml)
+[![coverage](https://img.shields.io/badge/coverage-12%25-yellow)]()
 
 Keybox management, security spoofing, and detection avoidance: clean, focused, no bloat.
 
@@ -58,7 +60,37 @@ npm install
 npm run build
 ```
 
-Output: `module.zip`
+Output: `Specter-v{version}.zip`
+
+### Testing
+
+```bash
+# Shell tests (boot scripts, features)
+bash tests/run.sh
+
+# Unit tests (vitest, happy-dom)
+npm test
+
+# Unit tests with coverage report
+npm run test:coverage
+
+# E2E browser smoke tests (Playwright)
+npm run test:e2e
+
+# TypeScript type check
+npx tsc --noEmit
+```
+
+Shell tests validate boot scripts and feature behavior in a mock environment (112 tests). TypeScript unit tests cover the WebUI bridge, config layer, toast, colour utilities, and helpers (84 tests). E2E tests verify the built HTML loads correctly in a real browser.
+
+CI enforces:
+- TypeScript strict compilation (`tsc --noEmit`)
+- ShellCheck linting (severity: warning)
+- Shell test suite (16 tests)
+- TypeScript test suite (65+ tests, vitest + happy-dom)
+- Module structure verification
+- No hardcoded `/data/adb/modules/Specter` paths in lib/ or features/
+- No `su -c` usage in feature scripts
 
 ## Legal
 

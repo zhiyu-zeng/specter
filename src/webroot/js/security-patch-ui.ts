@@ -36,21 +36,21 @@ export function wireSecurityPatch() {
     dialog.querySelector('#sp-fetch')!.addEventListener('click', async () => {
       const moddir = getModuleDir();
       if (!moddir) {
-        showToast(t('simple_toast_error', 'Failed'), { icon: 'error', type: 'error' as any, autoCloseDelay: 3000 });
+        showToast(t('simple_toast_error', 'Failed'), { icon: 'error', type: 'error', autoCloseDelay: 3000 });
         return;
       }
-      showToast(t('sp_fetching', 'Fetching latest security patch...'), { icon: 'info', type: 'info' as any, autoCloseDelay: 10000 });
+      showToast(t('sp_fetching', 'Fetching latest security patch...'), { icon: 'info', type: 'info', autoCloseDelay: 10000 });
       try {
         const { stdout } = await exec(`sh ${shellEscape(moddir + '/features/security_patch.sh')} --fetch 2>/dev/null || echo ""`);
         const date = stdout.trim();
         if (date && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
           input!.value = date;
-          showToast(t('sp_fetched', 'Latest security patch fetched'), { icon: 'check_circle', type: 'success' as any, autoCloseDelay: 2500 });
+          showToast(t('sp_fetched', 'Latest security patch fetched'), { icon: 'check_circle', type: 'success', autoCloseDelay: 2500 });
         } else {
-          showToast(t('simple_toast_error', 'Failed'), { icon: 'error', type: 'error' as any, autoCloseDelay: 3000 });
+          showToast(t('simple_toast_error', 'Failed'), { icon: 'error', type: 'error', autoCloseDelay: 3000 });
         }
       } catch {
-        showToast(t('simple_toast_error', 'Failed'), { icon: 'error', type: 'error' as any, autoCloseDelay: 3000 });
+        showToast(t('simple_toast_error', 'Failed'), { icon: 'error', type: 'error', autoCloseDelay: 3000 });
       }
     });
 
@@ -58,7 +58,7 @@ export function wireSecurityPatch() {
     dialog.querySelector('#sp-save')!.addEventListener('click', async () => {
       const val = input!.value.trim();
       if (!val || !/^\d{4}-\d{2}-\d{2}$/.test(val)) {
-        showToast(t('sp_invalid_date', 'Invalid date format (use YYYY-MM-DD)'), { icon: 'error', type: 'error' as any, autoCloseDelay: 3000 });
+        showToast(t('sp_invalid_date', 'Invalid date format (use YYYY-MM-DD)'), { icon: 'error', type: 'error', autoCloseDelay: 3000 });
         return;
       }
       const content = `all=${val}`;
@@ -66,10 +66,10 @@ export function wireSecurityPatch() {
         await exec(`cat > /data/adb/tricky_store/security_patch.txt << 'SEOF'\n${content}\nSEOF`);
         const moddir = getModuleDir();
         if (moddir) await exec(`sh ${moddir}/refresh_desc.sh`);
-        showToast(t('sp_saved', 'Security patch date saved'), { icon: 'check_circle', type: 'success' as any, autoCloseDelay: 2500 });
+        showToast(t('sp_saved', 'Security patch date saved'), { icon: 'check_circle', type: 'success', autoCloseDelay: 2500 });
         dialog.close();
       } catch {
-        showToast(t('sp_save_error', 'Failed to save'), { icon: 'error', type: 'error' as any, autoCloseDelay: 4000 });
+        showToast(t('sp_save_error', 'Failed to save'), { icon: 'error', type: 'error', autoCloseDelay: 4000 });
       }
     });
 

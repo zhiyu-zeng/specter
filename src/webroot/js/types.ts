@@ -3,6 +3,8 @@ export interface KsuBridge {
   spawn?(program: string, args: string, options: string, name: string): void;
 }
 
+export type ChildEventCallback = (...args: unknown[]) => void;
+
 export interface ChildProcess {
   stdout: {
     on(ev: 'data', fn: (data: string) => void): void;
@@ -13,8 +15,10 @@ export interface ChildProcess {
     emit(ev: 'data', data: string): void;
   };
   stdin: { on(): void; emit(): void };
-  on(ev: 'exit' | 'error', fn: (...args: any[]) => void): void;
-  emit(ev: string, ...args: any[]): void;
+  on(ev: 'exit', fn: (code: number) => void): void;
+  on(ev: 'error', fn: (err: Error) => void): void;
+  on(ev: string, fn: ChildEventCallback): void;
+  emit(ev: string, ...args: unknown[]): void;
 }
 
 export interface ModulePaths {
@@ -85,6 +89,6 @@ export interface ExecResult {
 declare global {
   interface Window {
     ksu: KsuBridge;
-    [key: string]: unknown;
+    isOverlayOpen: boolean;
   }
 }

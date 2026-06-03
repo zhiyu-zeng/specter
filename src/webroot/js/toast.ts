@@ -2,14 +2,23 @@ import { escapeHtml } from './utils.js';
 import { getTranslation } from './i18n.js';
 
 interface ToastOptions {
+  /** Optional action button label */
   action?: string;
+  /** Material icon name (e.g. `'check_circle'`, `'error'`) */
   icon?: string;
-  type?: string;
+  /** Visual style variant */
+  type?: 'success' | 'error' | 'info' | 'warning';
+  /** Auto-close delay in ms (default 3000); 0 disables auto-close */
   autoCloseDelay?: number;
+  /** Callback invoked when the action button is clicked */
   onActionClick?: () => void;
+  /** Additional CSS class name(s) for the toast element */
   className?: string;
 }
 
+const toastTimers = new WeakMap<HTMLElement, ReturnType<typeof setTimeout>>();
+
+/** Show a Material-styled toast notification. Returns the toast element for manual manipulation. */
 export function showToast(message: string, options: ToastOptions = {}) {
   const { action, icon, type, autoCloseDelay = 3000, onActionClick, className } = options;
 
@@ -40,7 +49,7 @@ export function showToast(message: string, options: ToastOptions = {}) {
 
   if (autoCloseDelay > 0) {
     const timer = setTimeout(() => close(toast), autoCloseDelay);
-    (toast as any)._autoTimer = timer;
+    toastTimers.set(toast, timer);
   }
 
   initSwipe(toast);
@@ -58,9 +67,10 @@ function initSwipe(toast: HTMLElement) {
     currentX = 0;
     dragging = true;
     toast.style.transition = 'none';
-    if ((toast as any)._autoTimer) {
-      clearTimeout((toast as any)._autoTimer);
-      (toast as any)._autoTimer = null;
+    const timer = toastTimers.get(toast);
+    if (timer) {
+      clearTimeout(timer);
+      toastTimers.delete(toast);
     }
   };
 
@@ -112,6 +122,7 @@ function close(toast: HTMLElement, { dismiss = false }: { dismiss?: boolean } = 
   }, 300);
 }
 
+/** Manually close a toast notification by its element reference. */
 export function closeToast(toast: HTMLElement) {
   close(toast);
 }

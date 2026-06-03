@@ -1,5 +1,6 @@
 const fetchCache = new Map<string, { data: unknown; expiry: number }>();
 
+/** Escape HTML special characters (&, <, >, ", ') for safe text interpolation. */
 export function escapeHtml(str: string): string {
   return String(str)
     .replace(/&/g, '&amp;')
@@ -9,10 +10,12 @@ export function escapeHtml(str: string): string {
     .replace(/'/g, '&#39;');
 }
 
+/** Shell-escape a string by wrapping it in single quotes and handling embedded quotes per POSIX. */
 export function shellEscape(str: string): string {
   return "'" + String(str).replace(/'/g, `'"'"'`) + "'";
 }
 
+/** Fetch and parse JSON from a URL with optional TTL-based caching. Returns `null` on failure. */
 export async function fetchJson<T>(url: string, ttlMs = 0): Promise<T | null> {
   if (ttlMs > 0) {
     const cached = fetchCache.get(url);
@@ -30,6 +33,7 @@ export async function fetchJson<T>(url: string, ttlMs = 0): Promise<T | null> {
   }
 }
 
+/** Set the `textContent` of an element by its `id`. No-op if the element does not exist. */
 export function setText(id: string, value: string) {
   const el = document.getElementById(id);
   if (el) el.textContent = value;

@@ -36,6 +36,18 @@ jobs:
           scandir: src
           severity: warning
 
+      - name: Run shell tests
+        run: bash tests/run.sh
+
+      - name: Run TS tests
+        run: npm test
+
+      - name: Coverage report
+        run: npm run test:coverage
+
+      - name: E2E smoke tests
+        run: npx playwright install chromium && npm run test:e2e
+
       - name: Build
         run: npm run build
 
