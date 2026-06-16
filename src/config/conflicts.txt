@@ -1,5 +1,5 @@
 zygisk_nohello|NoHello|/data/adb/modules/zygisk_nohello/service.sh|boot_hardening|passive
-tsupport-advance|TSupport-Advance|/data/adb/modules/tsupport-advance/post-fs-data.sh,/data/adb/modules/tsupport-advance/service.sh|boot_hardening,security_patch,lsposed,target|aggressive
+tsupport-advance|TSupport-Advance|/data/adb/modules/tsupport-advance/post-fs-data.sh,/data/adb/modules/tsupport-advance/service.sh|boot_hardening,security_patch,target|aggressive
 treat_wheel|TreatWheel|/data/adb/modules/treat_wheel/service.sh|prop_handler|passive
 sensitive_props|Sensitive Props|/data/adb/modules/sensitive_props/service.sh|boot_hardening|passive
 Yurikey|Yurikey Manager|/data/adb/modules/Yurikey/service.sh|boot_hardening,security_patch|aggressive

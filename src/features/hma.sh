@@ -1,12 +1,6 @@
 #!/system/bin/sh
 MODDIR=${0%/*}
 
-# Re-exec into init mount namespace to escape APatch/KSU ksu.exec sandbox
-if [ -z "$_NS_INIT" ] && [ -x /system/bin/nsenter ] && [ -e /proc/1/ns/mnt ]; then
-  export _NS_INIT=1
-  exec /system/bin/nsenter -t 1 -m -- /system/bin/sh "$0" "$@"
-fi
-
 . "$MODDIR/../lib/common.sh"
 . "$MODDIR/../lib/config_env.sh"
 . "$MODDIR/../lib/paths.sh"
@@ -37,28 +31,37 @@ fi
 
 log "HMA" "Found $_found"
 
+TEMP_FILE="/data/local/tmp/.specter_hma_config"
+_install_ok=0
+
 if check_network; then
-  ensure_dir "$_target_dir"
-  rm -f "$_target_file" 2>/dev/null
-  if [ -x /data/adb/ap/bin/busybox ] && /data/adb/ap/bin/busybox wget -T 10 --no-check-certificate -qO "$_target_file" -U "Specter/1.0" "$HMA_CONFIG_URL" 2>/dev/null && [ -s "$_target_file" ]; then
-    chmod 600 "$_target_file" 2>/dev/null
+  if download "$HMA_CONFIG_URL" "$TEMP_FILE" 2>/dev/null && [ -s "$TEMP_FILE" ]; then
     _pkg=$(echo "$_target_dir" | cut -d"/" -f5)
     _uid=$(pm list packages -U 2>/dev/null | grep "^package:$_pkg uid:" | sed "s/.*uid://") || _uid=0
-    chown "$_uid:$_uid" "$_target_file" 2>/dev/null
-    chown "$_uid:$_uid" "$_target_dir" 2>/dev/null
-    log "HMA" "Config downloaded and written to $_found"
-  elif download "$HMA_CONFIG_URL" "$_target_file" 2>/dev/null; then
-    chmod 600 "$_target_file" 2>/dev/null
-    _pkg=$(echo "$_target_dir" | cut -d"/" -f5)
-    _uid=$(pm list packages -U 2>/dev/null | grep "^package:$_pkg uid:" | sed "s/.*uid://") || _uid=0
-    chown "$_uid:$_uid" "$_target_file" 2>/dev/null
-    chown "$_uid:$_uid" "$_target_dir" 2>/dev/null
-    log "HMA" "Config downloaded and written to $_found"
+
+    # Try direct install (works on Magisk, boot, action.sh)
+    mkdir -p "$_target_dir" 2>/dev/null
+    if cp "$TEMP_FILE" "$_target_file" 2>/dev/null; then
+      chmod 600 "$_target_file" 2>/dev/null
+      chown "$_uid:$_uid" "$_target_file" 2>/dev/null
+      chown "$_uid:$_uid" "$_target_dir" 2>/dev/null
+      _install_ok=1
+    else
+      # Sandboxed (KSU/APatch WebUI) — use su to escape namespace
+      su -c "mkdir -p '$_target_dir' && cp '$TEMP_FILE' '$_target_file' && chmod 600 '$_target_file' && chown $_uid:$_uid '$_target_file' && chown $_uid:$_uid '$_target_dir'" 2>/dev/null && _install_ok=1
+    fi
+
+    if [ "$_install_ok" = "1" ]; then
+      log "HMA" "Config installed for $_found"
+    else
+      log "HMA" "Config download succeeded but install failed"
+    fi
+    rm -f "$TEMP_FILE"
   else
     log "HMA" "Download returned empty"
   fi
 fi
 
-unset _installed_pkgs _target_dir _target_file _found _uid _pkg
+unset _installed_pkgs _target_dir _target_file _found _uid _pkg _install_ok TEMP_FILE
 log "HMA" "Finish"
 exit 0

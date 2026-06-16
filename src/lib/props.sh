@@ -152,13 +152,6 @@ disable_bootloader_spoofer() {
   fi
 }
 
-hexpatch_deleteprop() {
-  _hd_prop="$1"
-  [ -n "$_hd_prop" ] || return 0
-  resetprop -p --delete "$_hd_prop" 2>/dev/null || true
-  unset _hd_prop
-}
-
 detect_region() {
 _dr_locale=$(getprop ro.system.locale 2>/dev/null || getprop persist.sys.locale 2>/dev/null || getprop ro.product.locale 2>/dev/null)
     _dr_locale=${_dr_locale:-en-US}

@@ -1,49 +1,27 @@
 #!/system/bin/sh
 MODDIR=${0%/*}
 
-if [ -z "$_NS_INIT" ] && [ -x /system/bin/nsenter ] && [ -e /proc/1/ns/mnt ]; then
-  export _NS_INIT=1
-  exec /system/bin/nsenter -t 1 -m -- /system/bin/sh "$0" "$@"
-fi
-
 . "$MODDIR/../lib/common.sh"
-. "$MODDIR/../lib/package_list.sh"
 . "$MODDIR/../lib/config_env.sh"
 
 [ "$(cfg_get toggle_prop_handler 1)" = "0" ] && exit 0
 
-_sp=$(cfg_get suspicious_props 1)
+PROP_FILE="/data/property/persistent_properties"
+[ -f "$PROP_FILE" ] || { log "PROPS" "persistent_properties not found"; exit 0; }
 
-[ "$_sp" = "0" ] && exit 0
-
-if [ "$_sp" != "0" ]; then
-  log "PROPS" "Cleaning suspicious props"
-  _found_count=0
-  _critical_count=0
-
-  _old_ifs="$IFS"; IFS="$(printf '\n')"
-  for _entry in $SUSPICIOUS_PROPS; do
-    _prop=$(echo "$_entry" | cut -d'|' -f1)
-    _severity=$(echo "$_entry" | cut -d'|' -f2)
-
-    _value=$(resetprop "$_prop" 2>/dev/null || echo "")
-    if [ -n "$_value" ]; then
-      _found_count=$((_found_count + 1))
-      [ "$_severity" = "critical" ] && _critical_count=$((_critical_count + 1))
-      case "$_severity" in
-        critical) echo "[CRITICAL] $_prop = $_value" ;;
-        warning)  echo "[WARNING] $_prop = $_value" ;;
-      esac
-      hexpatch_deleteprop "$_prop"
-    fi
-  done
-  IFS="$_old_ifs"; unset _old_ifs
-
-  if [ "$_found_count" -gt 0 ]; then
-    log "PROPS" "Found $_found_count suspicious props ($_critical_count critical)"
-  fi
-
-  unset _prop _severity _value _found_count _critical_count _entry
+if ! strings "$PROP_FILE" 2>/dev/null | grep -qiE "lsposed|hyperceiler|luckytool"; then
+  log "PROPS" "No suspicious props found"
+  exit 0
 fi
 
+log "PROPS" "Suspicious props detected, cleaning..."
+
+cp "$PROP_FILE" "$PROP_FILE.bak" 2>/dev/null || true
+
+strings "$PROP_FILE" 2>/dev/null | grep -iE "lsposed|hyperceiler|luckytool" | while read -r _prop; do
+  resetprop -p --delete "$_prop" 2>/dev/null || true
+  log "PROPS" "Deleted: $_prop"
+done
+
+unset _prop
 log "PROPS" "Done"
