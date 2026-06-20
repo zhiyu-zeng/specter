@@ -217,7 +217,7 @@ MOCK
 if [ -n "$1" ]; then
   echo "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef  $1"
 else
-  cat /dev/stdin 2>/dev/null | sha256sum 2>/dev/null || echo "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef  -"
+  echo "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  -"
 fi
 MOCK
   chmod +x "$_dir/sha256sum"

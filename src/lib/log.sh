@@ -1,3 +1,4 @@
+# shellcheck shell=sh
 log() {
   _l_tag="$1" _l_msg="$2"
   printf '[%s] [%s] %s\n' "$(date '+%T')" "$_l_tag" "$_l_msg"

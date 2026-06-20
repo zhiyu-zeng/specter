@@ -47,6 +47,7 @@ case "${1}" in
     fi
 
     _merge_cleanup
+    : "${_added:=0}"
     log "TARGET" "Denylist merge: checked $_count entries, added $_added"
     ;;
   --merge)
@@ -81,6 +82,7 @@ case "${1}" in
     fi
 
     _merge_cleanup
+    : "${_added:=0}"
     log "TARGET" "Checked $_count entries, added $_added"
     ;;
   *)

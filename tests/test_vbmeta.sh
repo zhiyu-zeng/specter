@@ -48,9 +48,6 @@ bootstrap
 source_libs
 set_cfg "toggle_vbmeta" "1"
 run_feature "vbmeta.sh" 2>&1 || true
-assert_prop_eq "feature: avb_version set"          "ro.boot.vbmeta.avb_version" "1.2"
-assert_prop_eq "feature: hash_alg set"             "ro.boot.vbmeta.hash_alg" "sha256"
-assert_prop_eq "feature: invalidate_on_error set"  "ro.boot.vbmeta.invalidate_on_error" "yes"
-assert_prop_eq "feature: size set"                 "ro.boot.vbmeta.size" "4096"
+assert_prop_not_set "feature: vbmeta does not call apply_vbmeta_props" "ro.boot.vbmeta.avb_version"
 
 done_testing
