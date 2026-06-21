@@ -22,7 +22,7 @@ if [ -f "$_dex" ]; then
   fi
 
   if [ -f "$TEMP_DIR/tee_hash" ]; then
-    echo "tee_hash=$(cat "$TEMP_DIR/tee_hash")"
+    echo "tee_bhash=$(cat "$TEMP_DIR/tee_hash")"
   fi
 
   if [ -f "$TEMP_DIR/tee_tier" ]; then
@@ -40,12 +40,9 @@ _vbmeta_hash=$(vbmeta_digest "$_vbmeta_dev" 2>/dev/null || true)
 [ -n "$_vbmeta_hash" ] && echo "vbmeta_hash=$_vbmeta_hash"
 unset _vbmeta_slot _vbmeta_dev _vbmeta_hash
 
-# Prop value: read BEFORE boot_hash.sh so we get the raw bootloader-set value
+# Prop value
 _bh=$(getprop ro.boot.vbmeta.digest 2>/dev/null || echo "")
 [ -n "$_bh" ] && echo "boot_hash=$_bh"
 unset _bh
-
-# Run boot_hash.sh to resolve the boot hash via its priority chain
-sh "$MODULE_ROOT/features/boot_hash.sh" 2>/dev/null || true
 
 rm -rf "$TEMP_DIR"

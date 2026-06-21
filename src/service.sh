@@ -15,7 +15,7 @@ exec >>"$BOOT_LOG" 2>&1
 
 log "SERVICE" "Running Specter boot tasks"
 
-for _bf in boot_hardening adb_disabler rom_fingerprint vbmeta; do
+for _bf in boot_hardening adb_disabler rom_fingerprint; do
   case "$_bf" in *[!a-zA-Z0-9_-]*) log "SERVICE" "Skipping invalid feature: $_bf"; continue ;; esac
   _bf_default=1
   case "$_bf" in adb_disabler|rom_fingerprint) _bf_default=0 ;; esac
@@ -24,19 +24,21 @@ for _bf in boot_hardening adb_disabler rom_fingerprint vbmeta; do
 done
 unset _bf _bf_default
 
+# TEE check runs first — populates $TEE_BHASH for boot_hash.sh
+sh "$MODDIR/features/tee.sh" >"$SPECTER_DIR/log/boot_tee.log" 2>&1 || true
+
 if _feature_should_run "prop_handler"; then
   [ "$(cfg_get boot_state_props 1)" != "0" ] && apply_boot_props
   [ "$(cfg_get spoof_build_props 1)" != "0" ] && spoof_build_props
   [ "$(cfg_get region_props 1)" != "0" ] && apply_region_props
   sh "$MODDIR/features/boot_state_props.sh" >"$SPECTER_DIR/log/boot_state_props.log" 2>&1
+  [ "$(cfg_get toggle_vbmeta 1)" != "0" ] && sh "$MODDIR/features/vbmeta.sh" >"$SPECTER_DIR/log/boot_vbmeta.log" 2>&1 || true
+  [ "$(cfg_get toggle_boot_hash 1)" != "0" ] && sh "$MODDIR/features/boot_hash.sh" >"$SPECTER_DIR/log/boot_hash.log" 2>&1 || true
 else
   log "SERVICE" "Skipping prop_handler (disabled by config)"
 fi
 
 log "SERVICE" "Boot-time features done"
-
-sh "$MODDIR/features/tee.sh" >"$SPECTER_DIR/log/boot_tee.log" 2>&1 || true
-sh "$MODDIR/features/boot_hash.sh" >"$SPECTER_DIR/log/boot_hash.log" 2>&1 || true
 
 [ -f "$SPECTER_DIR/rom_spoof_reported" ] && {
   sh "$MODDIR/features/rom_spoof_cleanup.sh" >/dev/null 2>&1 || true

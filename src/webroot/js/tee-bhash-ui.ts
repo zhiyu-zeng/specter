@@ -1,15 +1,10 @@
-import { exec, spawnScript } from './bridge.js';
+import { spawnScript } from './bridge.js';
 import { getTranslation } from './i18n.js';
 import { showToast } from './toast.js';
 import { addEntry } from './history.js';
 import { appendToOutput } from './terminal.js';
-import { shellEscape } from './utils.js';
 
 const t = (key: string, fallback: string): string => getTranslation(key) || fallback;
-
-function getSpDir(): string {
-  return '/data/adb/specter';
-}
 
 export function wireTeeHash() {
   const btn = document.getElementById('tee-hash-btn');
@@ -25,7 +20,7 @@ export function wireTeeHash() {
     let stdout = '';
 
     try {
-      const child = spawnScript('check_tee_hash.sh', 'common');
+      const child = spawnScript('check_tee_bhash.sh', 'common');
 
       child.stdout.on('data', (line: string) => {
         stdout += line + '\n';
@@ -58,14 +53,14 @@ export function wireTeeHash() {
       }
 
       const teeStatus = params['tee_status'] || 'unknown';
-      const teeHash = params['tee_hash'] || '';
+      const teeHash = params['tee_bhash'] || '';
       const vbmetaHash = params['vbmeta_hash'] || '';
       const bootHash = params['boot_hash'] || '';
       const teeTier = params['tee_tier'] || '';
 
       showResultDialog(teeStatus, teeHash, bootHash, vbmetaHash, teeTier);
 
-      addEntry('check_tee_hash.sh', stdout);
+      addEntry('check_tee_bhash.sh', stdout);
     } catch {
       progress?.close();
       showToast(t('simple_toast_error', 'Failed'), {
@@ -140,7 +135,6 @@ function showResultDialog(
 
   const actions = `
     <md-text-button id="tee-hash-close">${t('dialog_close', 'Close')}</md-text-button>
-    <md-filled-tonal-button id="tee-hash-save">${t('cache_update', 'Update cache')}</md-filled-tonal-button>
   `;
 
   const dialog = document.createElement('md-dialog');
@@ -168,38 +162,6 @@ function showResultDialog(
       });
     });
   }
-
-  dialog.querySelector('#tee-hash-save')!.addEventListener('click', async () => {
-    try {
-      const spDir = getSpDir();
-      const cmds: string[] = [];
-
-      const teeBool = teeStatus === 'normal' ? 'false' : 'true';
-      cmds.push(`mkdir -p ${shellEscape(spDir)}`);
-      cmds.push(`printf 'tee_broken=%s\\n' ${shellEscape(teeBool)} > ${shellEscape(spDir + '/tee_status')}`);
-
-      if (teeHash) {
-        cmds.push(`printf '%s\\n' ${shellEscape(teeHash)} > ${shellEscape(spDir + '/tee_hash')}`);
-      }
-      if (teeTier) {
-        cmds.push(`printf '%s\\n' ${shellEscape(teeTier)} > ${shellEscape(spDir + '/tee_tier')}`);
-      }
-      if (vbmetaHash) {
-        cmds.push(`printf '%s\\n' ${shellEscape(vbmetaHash)} > ${shellEscape(spDir + '/vbmeta_digest')}`);
-      }
-      cmds.push(`rm -f ${shellEscape(spDir + '/tee_reported')}`);
-
-      await exec(cmds.join(' && '));
-      showToast(t('cache_updated', 'Cache updated'), {
-        icon: 'check_circle', type: 'success', autoCloseDelay: 2500,
-      });
-      dialog.close();
-    } catch {
-      showToast(t('boot_hash_save_error', 'Failed to save'), {
-        icon: 'error', type: 'error', autoCloseDelay: 4000,
-      });
-    }
-  });
 
   dialog.addEventListener('close', () => document.body.removeChild(dialog));
   dialog.show();

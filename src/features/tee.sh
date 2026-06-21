@@ -9,8 +9,8 @@ log "TEE" "Start"
 if [ -f "$TEE_STATUS" ] && [ ! -f "$SPECTER_DIR/tee_reported" ]; then
   _b=$(grep -E '^(tee_broken|tee_fallback)=' "$TEE_STATUS" 2>/dev/null | cut -d= -f2)
   log "TEE" "Status: ${_b:-$(cat "$TEE_STATUS")}"
-  if [ -f "$TEE_HASH" ]; then
-    _h=$(cat "$TEE_HASH")
+  if [ -f "$TEE_BHASH" ]; then
+    _h=$(cat "$TEE_BHASH")
   elif [ -f "$VBMETA_DIGEST" ]; then
     _h=$(cat "$VBMETA_DIGEST")
   fi
@@ -39,8 +39,8 @@ else
   log "TEE" "Status: unknown (no status file written)"
 fi
 
-if [ -f "$TEE_HASH" ]; then
-  _h=$(cat "$TEE_HASH")
+if [ -f "$TEE_BHASH" ]; then
+  _h=$(cat "$TEE_BHASH")
   log "TEE" "Hash: $_h"
 else
   log "TEE" "Hash: unavailable"

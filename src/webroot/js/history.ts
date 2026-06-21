@@ -322,10 +322,10 @@ export function renderActivityPreview() {
       if (o.includes('not found')) return t('history_desc_widevine_no_keybox', 'Widevine: no KmInstallKeybox');
       return t('history_desc_widevine_done', 'Widevine done');
     },
-    'check_tee_hash.sh': (o) => {
+    'check_tee_bhash.sh': (o) => {
       const s = extractValue(o, /tee_status=(\w+)/);
       if (s === 'normal') {
-        const h = extractValue(o, /tee_hash=([a-f0-9]+)/);
+        const h = extractValue(o, /tee_bhash=([a-f0-9]+)/);
         return h ? t('history_desc_tee_normal_hash', 'TEE normal · {hash}').replace('{hash}', h.slice(0, 8)) : t('history_desc_tee_normal', 'TEE normal');
       }
       if (s === 'broken') return t('history_desc_tee_broken', 'TEE broken');

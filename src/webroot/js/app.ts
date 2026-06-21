@@ -13,6 +13,7 @@ import { setDevMode } from './state.js';
 import { renderActivityPreview } from './history.js';
 import { wireTopBarScroll, wireNavigation, onHomeShow } from './navigation.js';
 import { renderControlToggles, wireDevMode } from './toggles.js';
+import { FEATURE_I18N_KEYS } from './constants.js';
 import { wireActions, buildFriendlyNames } from './actions.js';
 
 const t = (key: string, fallback: string): string => getTranslation(key) || fallback;
@@ -74,7 +75,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   import('./gms-ui.js').then(m => m.wireGms()).catch(() => {});
   import('./security-patch-ui.js').then(m => m.wireSecurityPatch()).catch(() => {});
   import('./boot-hash-ui.js').then(m => m.wireBootHash()).catch(() => {});
-  import('./tee-hash-ui.js').then(m => m.wireTeeHash()).catch(() => {});
+  import('./tee-bhash-ui.js').then(m => m.wireTeeHash()).catch(() => {});
   import('./font.js').then(m => m.wireFontToggles()).catch(() => {});
 
   const savedDevMode = await cfgGet('dev_mode', 'false') || 'false';
@@ -146,8 +147,14 @@ async function wireConflictToggles() {
     const hint = document.createElement('span');
     hint.className = 'supporting-text';
     hint.id = `conflict-hint-${mod.key}`;
-    const featLabel = mod.features ? `${t('conflict_covers', 'Covers')}: ${mod.features} | ` : '';
-    hint.textContent = featLabel + (mod.prioritySpecter ? t('conflict_priority_specter', 'Priority → Specter') : `${t('conflict_priority_module', 'Priority →')} ${mod.friendlyName}`);
+    const prettyFeatures = mod.features
+      ? [...new Set(mod.features.split(',').map(f => f.trim()).map(f => {
+          const key = FEATURE_I18N_KEYS[f];
+          return key ? t(key) || f : f;
+        }))].join(', ')
+      : '';
+    const featLabel = prettyFeatures ? `${t('conflict_covers', 'Covers')}: ${prettyFeatures} | ` : '';
+    hint.textContent = featLabel.replace(/ \| $/, '');
 
     content.appendChild(label);
     content.appendChild(hint);
@@ -179,8 +186,14 @@ async function wireConflictToggles() {
           const err = result.stderr || 'Failed to update';          throw new Error(String(err));
         }
 
-        const featLabel = mod.features ? `${t('conflict_covers', 'Covers')}: ${mod.features} | ` : '';
-        hint.textContent = featLabel + (isModule ? `${t('conflict_priority_module', 'Priority →')} ${mod.friendlyName}` : t('conflict_priority_specter', 'Priority → Specter'));
+        const prettyFeatures = mod.features
+          ? [...new Set(mod.features.split(',').map(f => f.trim()).map(f => {
+              const key = FEATURE_I18N_KEYS[f];
+              return key ? t(key) || f : f;
+            }))].join(', ')
+          : '';
+        const featLabel = prettyFeatures ? `${t('conflict_covers', 'Covers')}: ${prettyFeatures} | ` : '';
+        hint.textContent = featLabel.replace(/ \| $/, '');
         showToast(`${mod.friendlyName}: ${isModule ? t('conflict_toast_module_handles', 'Module handles it') : t('conflict_toast_specter_handles', 'Specter handles it')}`, { icon: 'check_circle', type: 'success', autoCloseDelay: 2500 });
       } catch (e) {
         showToast(t('toast_failed_update', 'Failed to update'), { icon: 'error', type: 'error', autoCloseDelay: 3000 });

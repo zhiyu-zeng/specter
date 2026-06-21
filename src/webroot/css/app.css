@@ -916,6 +916,7 @@ md-divider.settings-divider {
   border-radius: 9999px;
   cursor: pointer;
   color: var(--md-sys-color-on-surface-variant);
+  font-family: inherit;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
   white-space: nowrap;
@@ -1476,13 +1477,25 @@ md-filled-tonal-button {
 }
 
 .output-terminal-content p {
-  margin: 0;
+   margin: 0;
   padding: 0;
   white-space: pre-wrap;
   word-break: break-all;
 }
 
+.ta-mode-content {
+  min-width: 360px;
+}
+.ta-mode-desc {
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+.ta-mode-content .list-item--toggle {
+  margin-top: 8px;
+}
+
 /* ===== Target App Overlay ===== */
+
 
 .ta-overlay {
   z-index: 9999;
@@ -1750,12 +1763,9 @@ md-filled-tonal-button {
   font-size: 18px;
   line-height: 1;
 }
-
 .ta-item[data-state="unchecked"] {
   opacity: 0.55;
 }
-
-
 
 .ta-fab {
   position: fixed;

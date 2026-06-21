@@ -35,27 +35,63 @@ _is_zero() {
   esac
 }
 
-# Priority 1: TEE attestation hash (cached by tee.sh)
-_h=""
-[ -f "$TEE_HASH" ] && _h=$(tr -d ' \n' < "$TEE_HASH" 2>/dev/null || echo "")
-if [ -n "$_h" ] && ! _is_zero "$_h" && [ "${#_h}" -eq 64 ]; then
-  _set_hash "$_h"
-  log "BOOT_HASH" "Source: TEE attestation"
-  apply_vbmeta_props
-  log "BOOT_HASH" "Done"
-  exit 0
+# Step 1: Cache all candidate values
+
+_tee_bhash_file="$TEE_BHASH"
+TEE_BHASH=""
+[ -f "$_tee_bhash_file" ] && TEE_BHASH=$(tr -d ' \n' < "$_tee_bhash_file" 2>/dev/null || echo "")
+
+PROP_BHASH=$(getprop ro.boot.vbmeta.digest 2>/dev/null || echo "")
+
+# Step 2: Resolve winner via priority chain
+
+_winner=""
+_winner_src=""
+
+# Priority 1: TEE attestation hash
+if [ -n "$TEE_BHASH" ] && ! _is_zero "$TEE_BHASH" && [ "${#TEE_BHASH}" -eq 64 ]; then
+  _winner="$TEE_BHASH"
+  _winner_src="TEE attestation"
 fi
 
-# Priority 2: Compute from vbmeta partition
-. "$MODDIR/../lib/vbmeta.sh"
-_vbmeta_slot=$(getprop ro.boot.slot_suffix 2>/dev/null || echo "")
-_vbmeta_dev="/dev/block/by-name/vbmeta${_vbmeta_slot}"
-[ -b "$_vbmeta_dev" ] || _vbmeta_dev="/dev/block/by-name/vbmeta"
-_h=$(vbmeta_digest "$_vbmeta_dev" 2>/dev/null || true)
-if [ -n "$_h" ] && [ "${#_h}" -eq 64 ]; then
-  _set_hash "$_h"
-  log "BOOT_HASH" "Source: partition"
+# Priority 2: Existing prop value (set by bootloader)
+if [ -z "$_winner" ] && [ -n "$PROP_BHASH" ] && ! _is_zero "$PROP_BHASH" && [ "${#PROP_BHASH}" -eq 64 ]; then
+  _winner="$PROP_BHASH"
+  _winner_src="prop"
+fi
+
+# Priority 3: Compute from vbmeta partition
+if [ -z "$_winner" ]; then
+  . "$MODDIR/../lib/vbmeta.sh"
+  _vbmeta_slot=$(getprop ro.boot.slot_suffix 2>/dev/null || echo "")
+  _vbmeta_dev="/dev/block/by-name/vbmeta${_vbmeta_slot}"
+  [ -b "$_vbmeta_dev" ] || _vbmeta_dev="/dev/block/by-name/vbmeta"
+  CALC_BHASH=$(vbmeta_digest "$_vbmeta_dev" 2>/dev/null || true)
+  if [ -n "$CALC_BHASH" ] && [ "${#CALC_BHASH}" -eq 64 ]; then
+    _winner="$CALC_BHASH"
+    _winner_src="partition"
+  fi
+fi
+
+# Step 3: Apply winner
+if [ -n "$_winner" ]; then
+  case "$_winner_src" in
+    "TEE attestation"|"partition")
+      _set_hash "$_winner"
+      ;;
+    "prop")
+      if [ -d "/data/adb/modules/brene" ] && [ "$(cfg_get conflict_brene priority_module)" = "priority_module" ]; then
+        _set_hash "$_winner"
+      else
+        ensure_dir "$SPECTER_DIR"
+        echo "$_winner" > "$VBMETA_DIGEST"
+        log "BOOT_HASH" "Boot hash already valid, keeping bootloader value"
+      fi
+      ;;
+  esac
   apply_vbmeta_props
+  echo "$_winner" > "$_tee_bhash_file"
+  log "BOOT_HASH" "Source: $_winner_src"
   log "BOOT_HASH" "Done"
   exit 0
 fi

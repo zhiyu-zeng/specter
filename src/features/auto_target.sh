@@ -39,14 +39,21 @@ while IFS= read -r _pkg; do
 done < "$TEMP_LIST"
 
 if [ -n "$_new_pkgs" ]; then
+  _default_mode=$(cfg_get target_default_mode "bare")
+  case "$_default_mode" in
+    "force") _suffix="!" ;;
+    "conditional") _suffix="?" ;;
+    *) _suffix="" ;;
+  esac
   _added=0
   while IFS= read -r _pkg; do
     [ -z "$_pkg" ] && continue
-    echo "$_pkg" >> "$TARGET_TXT"
+    echo "${_pkg}${_suffix}" >> "$TARGET_TXT"
     _added=$((_added + 1))
   done <<EOF
 $_new_pkgs
 EOF
+  unset _default_mode _suffix
   log "AUTO_TARGET" "Added $_added new package(s)"
 fi
 

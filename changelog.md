@@ -1,3 +1,18 @@
+# v1.4.4.15
+
+**Changed**
+- Boot hash priority chain restructured: TEE attestation → existing prop → VBMeta partition; bootloader-set prop kept as-is when valid
+- `tee.sh` moved before `boot_hash.sh` in service order
+- `TEE_HASH` → `TEE_BHASH` throughout; files renamed: `check_tee_hash.sh` → `check_tee_bhash.sh`, `tee-hash-ui.ts` → `tee-bhash-ui.ts`
+- Check TEE & Boot Hash UI is read-only — removed "Update cache" button
+- PIF fingerprint validation at boot (skip re-fetch if valid)
+- VBMeta & Boot Hash toggles added to Prop Handler dialog; `toggle-vbmeta` removed from Control page
+- Themed Android fallback icon in target apps
+- `toggle_autopif` default changed to `0`
+
+**Fixed**
+- Boot hash never applied on first boot (`tee.sh` ran after `boot_hash.sh`)
+
 # v1.4.4.14
 
 **Changed**

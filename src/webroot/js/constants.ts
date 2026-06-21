@@ -25,7 +25,6 @@ export interface ToggleDef {
 
 export const CONTROL_TOGGLES: ToggleDef[] = [
   { id: 'toggle-boot_hardening', key: 'toggle_boot_hardening', icon: 'security', section: 'boot' },
-  { id: 'toggle-vbmeta', key: 'toggle_vbmeta', icon: 'verified', section: 'boot' },
   { id: 'toggle-prop_handler', key: 'toggle_prop_handler', icon: 'lock', section: 'boot' },
   { id: 'toggle-adb_disabler', key: 'toggle_adb_disabler', default: '0', icon: 'usb_off', section: 'boot' },
   { id: 'toggle-rom_fingerprint', key: 'toggle_rom_fingerprint', default: '0', icon: 'fingerprint', section: 'boot' },
@@ -36,8 +35,16 @@ export const CONTROL_TOGGLES: ToggleDef[] = [
   { id: 'toggle-action_keybox', key: 'toggle_action_keybox', icon: 'vpn_key', section: 'action' },
   { id: 'toggle-background_auto_target', key: 'toggle_auto_target', icon: 'my_location', section: 'background' },
   { id: 'toggle-background_keybox_info', key: 'toggle_keybox_info', icon: 'refresh', section: 'background' },
-  { id: 'toggle-background_autopif', key: 'toggle_autopif', icon: 'fingerprint', section: 'background' },
+  { id: 'toggle-background_autopif', key: 'toggle_autopif', default: '0', icon: 'fingerprint', section: 'background' },
 ];
+
+export const FEATURE_I18N_KEYS: Record<string, string> = {
+  boot_hardening: 'control_toggle_boot_hardening',
+  prop_handler: 'control_toggle_prop_handler',
+  security_patch: 'control_toggle_action_security_patch',
+  target: 'control_toggle_action_target',
+  boot_hash: 'prop_handler_boot_hash',
+};
 
 export const TRICKY_DIR = '/data/adb/tricky_store';
 

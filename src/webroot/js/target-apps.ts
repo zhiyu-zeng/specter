@@ -1,4 +1,8 @@
+import '@material/web/labs/segmentedbuttonset/outlined-segmented-button-set.js';
+import '@material/web/labs/segmentedbutton/outlined-segmented-button.js';
+import '@material/web/switch/switch.js';
 import { exec, getModuleDir, getDataDir } from './bridge.js';
+import { cfgGet, cfgSet } from './cfg.js';
 import { shellEscape } from './utils.js';
 import { showToast } from './toast.js';
 import { getTranslation } from './i18n.js';
@@ -16,7 +20,19 @@ interface TargetApp {
   state: AppState;
 }
 
-const FALLBACK_ICON = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24"><path fill="%23999" d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>');
+const ANDROID_PATH = 'M40-240q9-107 65.5-197T256-580l-74-128q-6-9-3-19t13-15q8-5 18-2t16 12l74 128q86-36 180-36t180 36l74-128q6-9 16-12t18 2q10 5 13 15t-3 19l-74 128q94 53 150.5 143T920-240H40Zm275.5-124.5Q330-379 330-400t-14.5-35.5Q301-450 280-450t-35.5 14.5Q230-421 230-400t14.5 35.5Q259-350 280-350t35.5-14.5Zm400 0Q730-379 730-400t-14.5-35.5Q701-450 680-450t-35.5 14.5Q630-421 630-400t14.5 35.5Q659-350 680-350t35.5-14.5Z';
+
+function themedFallbackIcon(): string {
+  const root = document.documentElement;
+  const cs = getComputedStyle(root);
+  const bg = cs.getPropertyValue('--md-sys-color-surface-container-highest').trim() || '#e6e0e9';
+  const fg = cs.getPropertyValue('--md-sys-color-on-surface-variant').trim() || '#49454f';
+  return 'data:image/svg+xml,' + encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 -960 960 960">`
+    + `<circle cx="480" cy="-480" r="460" fill="${bg}"/>`
+    + `<g transform="matrix(0.7 0 0 0.7 144 -144)"><path fill="${fg}" d="${ANDROID_PATH}"/></g></svg>`
+  );
+}
 
 const TARGET_MODE_ORDER: TargetState[] = ['bare', 'conditional', 'force'];
 const BLACKLIST_STATE_ORDER: BlacklistState[] = ['unchecked', 'blacklisted'];
@@ -124,6 +140,9 @@ function buildOverlayHTML(): string {
         <md-menu-item id="ta-deselect-all">
           <div slot="headline">${t('ta_deselect_all', 'Deselect All')}</div>
         </md-menu-item>
+        <md-menu-item id="ta-mode">
+          <div slot="headline">${t('ta_mode_menu', 'Default Mode')}</div>
+        </md-menu-item>
         <md-menu-item id="ta-toggle-system">
           <div slot="headline">${t('ta_show_system', 'Show system apps')}</div>
         </md-menu-item>
@@ -213,7 +232,7 @@ class AppIconManager {
 
   private fetch(pkg: string, img: HTMLImageElement, spin: HTMLElement): void {
     const done = () => { spin.style.display = 'none'; img.style.opacity = '1'; };
-    const fail = () => { img.src = FALLBACK_ICON; done(); };
+    const fail = () => { img.src = themedFallbackIcon(); done(); };
     img.onload = done;
     img.onerror = fail;
 
@@ -254,6 +273,7 @@ export async function openTargetAppsManager() {
   let showSystemApps = false;
   let sysPkgs: string[] = [];
   let mode: Mode = 'target';
+  let defaultMode = 'bare';
 
   const iconMgr = new AppIconManager();
 
@@ -326,7 +346,7 @@ export async function openTargetAppsManager() {
   }
 
   overlay.querySelector('#ta-select-all')!.addEventListener('click', () => {
-    for (const app of apps) app.state = mode === 'blacklist' ? 'blacklisted' : 'bare';
+    for (const app of apps) app.state = mode === 'blacklist' ? 'blacklisted' : (defaultMode as AppState);
     appendToOutput(`[TARGET] Selected all apps`);
     applyFilters();
     closeTapMenu();
@@ -392,6 +412,104 @@ export async function openTargetAppsManager() {
     closeTapMenu();
   });
 
+  overlay.querySelector('#ta-mode')!.addEventListener('click', () => {
+    closeTapMenu();
+    openModeDialog();
+  });
+
+  function paintSeg(root: HTMLElement): void {
+    const rootStyle = document.documentElement.style;
+    const hex: Record<string, [string, string]> = {
+      bare: [rootStyle.getPropertyValue('--md-sys-color-primary').trim(), rootStyle.getPropertyValue('--md-sys-color-on-primary').trim()],
+      conditional: [rootStyle.getPropertyValue('--md-sys-color-tertiary').trim(), rootStyle.getPropertyValue('--md-sys-color-on-tertiary').trim()],
+      force: [rootStyle.getPropertyValue('--md-sys-color-error').trim(), rootStyle.getPropertyValue('--md-sys-color-on-error').trim()],
+    };
+    const inject = (btn: Element) => {
+      const sr = btn.shadowRoot;
+      if (!sr) { requestAnimationFrame(() => inject(btn)); return; }
+      const val = btn.getAttribute('value');
+      if (!val) return;
+      const h = hex[val];
+      if (!h || !h[0] || !h[1]) return;
+      const [bg, fg] = h;
+      const sheet = new CSSStyleSheet();
+      sheet.replaceSync(`.md3-segmented-button--selected{background-color:${bg}}.md3-segmented-button.md3-segmented-button--selected:enabled .md3-segmented-button__label-text{color:${fg}}.md3-segmented-button.md3-segmented-button--selected:enabled:hover .md3-segmented-button__label-text{color:${fg}}.md3-segmented-button.md3-segmented-button--selected:enabled:focus .md3-segmented-button__label-text{color:${fg}}.md3-segmented-button.md3-segmented-button--selected:enabled:active .md3-segmented-button__label-text{color:${fg}}.md3-segmented-button--selected .md3-segmented-button__icon{color:${fg}}.md3-segmented-button--selected .md3-segmented-button__checkmark-path{stroke:${fg}}.md3-segmented-button--selected:hover .md3-segmented-button__checkmark-path{stroke:${fg}}.md3-segmented-button--selected:focus .md3-segmented-button__checkmark-path{stroke:${fg}}.md3-segmented-button--selected:active .md3-segmented-button__checkmark-path{stroke:${fg}}`);
+      sr.adoptedStyleSheets = [...sr.adoptedStyleSheets, sheet];
+    };
+    root.querySelectorAll('md-outlined-segmented-button').forEach(inject);
+
+    const set = root.querySelector('md-outlined-segmented-button-set');
+    if (set) {
+      const injectFlex = () => {
+        const sr = set.shadowRoot;
+        if (!sr) { requestAnimationFrame(injectFlex); return; }
+        const s = new CSSStyleSheet();
+        s.replaceSync('::slotted(md-outlined-segmented-button){flex:1;min-width:0}');
+        sr.adoptedStyleSheets = [...sr.adoptedStyleSheets, s];
+      };
+      injectFlex();
+    }
+  }
+
+  function openModeDialog() {
+    const d = document.createElement('md-dialog');
+    d.innerHTML = `
+      <div slot="headline">${t('ta_mode_settings', 'Default Mode')}</div>
+      <div slot="content" class="ta-mode-content">
+        <p class="supporting-text ta-mode-desc">${t('ta_mode_desc', 'Controls the default mode suffix added to new app targets in Tricky Store')}</p>
+        <md-outlined-segmented-button-set>
+          <md-outlined-segmented-button value="bare"${defaultMode === 'bare' ? ' selected' : ''} label="${t('ta_mode_bare', 'Auto')}"></md-outlined-segmented-button>
+          <md-outlined-segmented-button value="conditional"${defaultMode === 'conditional' ? ' selected' : ''} label="? ${t('ta_mode_conditional', 'Leaf')}"></md-outlined-segmented-button>
+          <md-outlined-segmented-button value="force"${defaultMode === 'force' ? ' selected' : ''} label="! ${t('ta_mode_force', 'Gen')}"></md-outlined-segmented-button>
+        </md-outlined-segmented-button-set>
+        <div class="list-item list-item--toggle">
+          <div class="li-icon"><md-icon aria-hidden="true">compare_arrows</md-icon></div>
+          <div class="list-item-content">
+            <div class="toggle-text">${t('ta_mode_override_label', 'Override existing')}</div>
+            <span class="supporting-text">${t('ta_mode_override_desc', 'Apply this mode to all currently selected apps')}</span>
+          </div>
+          <div class="spacer"></div>
+          <md-switch icons id="ta-mode-do-override"></md-switch>
+        </div>
+      </div>
+      <div slot="actions">
+        <md-text-button class="dialog-action-close">${t('dialog_cancel', 'Cancel')}</md-text-button>
+        <md-filled-button id="ta-mode-apply">${t('dialog_apply', 'Apply')}</md-filled-button>
+      </div>
+    `;
+    document.body.appendChild(d);
+    d.addEventListener('close', () => document.body.removeChild(d));
+
+    let _mode = defaultMode;
+    d.querySelectorAll('md-outlined-segmented-button').forEach(b => {
+      b.addEventListener('click', () => { _mode = b.getAttribute('value') || 'bare'; });
+    });
+    d.querySelector('#ta-mode-apply')!.addEventListener('click', () => {
+      defaultMode = _mode;
+      cfgSet('target_default_mode', _mode);
+      const doOverride = (d.querySelector('#ta-mode-do-override') as any)?.selected;
+      let count = 0;
+      if (doOverride) {
+        for (const app of apps) {
+          if (app.state !== 'unchecked') {
+            app.state = _mode as AppState;
+            count++;
+          }
+        }
+        applyFilters();
+      }
+      d.close();
+      if (count > 0) {
+        showToast(t('ta_mode_applied_both', 'Default saved, {count} apps overridden').replace('{count}', String(count)), { icon: 'check_circle', type: 'success', autoCloseDelay: 2500 });
+      } else {
+        showToast(t('ta_default_saved', 'Default mode saved'), { icon: 'check_circle', type: 'success', autoCloseDelay: 2500 });
+      }
+    });
+    d.querySelector('.dialog-action-close')!.addEventListener('click', () => d.close());
+    d.show();
+    paintSeg(d);
+  }
+
   overlay.querySelector('#ta-toggle-system')!.addEventListener('click', async () => {
     showSystemApps = !showSystemApps;
     appendToOutput(`[TARGET] ${showSystemApps ? 'Showing' : 'Hiding'} system apps`);
@@ -432,6 +550,7 @@ export async function openTargetAppsManager() {
 
   async function loadData() {
     try {
+      defaultMode = (await cfgGet('target_default_mode', 'bare')) || 'bare';
       const [targetResult, pkgs] = await Promise.all([
         exec(`cat ${TRICKY_DIR}/target.txt 2>/dev/null || echo ""`),
         fetchUserPackages(),
@@ -545,7 +664,7 @@ export async function openTargetAppsManager() {
         if (mode === 'blacklist') {
           applyAppState(app.state === 'unchecked' ? 'blacklisted' : 'unchecked');
         } else {
-          applyAppState(app.state === 'unchecked' ? 'bare' : 'unchecked');
+          applyAppState(app.state === 'unchecked' ? (defaultMode as AppState) : 'unchecked');
         }
       });
 

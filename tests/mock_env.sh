@@ -289,7 +289,7 @@ source_libs() {
   CONFLICT_BACKUP_FILE="$SPECTER_DIR/conflict_backups.txt"
   VBMETA_DIGEST="$SPECTER_DIR/vbmeta_digest"
   TEE_STATUS="$SPECTER_DIR/tee_status"
-  TEE_HASH="$SPECTER_DIR/tee_hash"
+  TEE_BHASH="$SPECTER_DIR/tee_hash"
 }
 
 # Run a feature script in a clean subshell with mocks
